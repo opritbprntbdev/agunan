@@ -1,0 +1,17 @@
+{
+  "name": "agunan",
+  "version": "1.0.0",
+  "description": "A simple collateral management system",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "keywords": [
+    "collateral",
+    "finance",
+    "banking",
+    "agunan"
+  ],
+  "author": "",
+  "license": "MIT"
+}
