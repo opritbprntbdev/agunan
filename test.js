@@ -34,9 +34,19 @@ assert(collateral1.type === 'real-estate', 'Collateral type is set correctly');
 assert(collateral1.value === 500000, 'Collateral value is set correctly');
 assert(collateral1.status === 'active', 'Collateral status defaults to active');
 
+// Test validation
+assertThrows(() => new Collateral('', 'real-estate', 500000), 'Empty ID throws error');
+assertThrows(() => new Collateral('C001', '', 500000), 'Empty type throws error');
+assertThrows(() => new Collateral('C001', 'real-estate', -100), 'Negative value throws error');
+assertThrows(() => new Collateral('C001', 'real-estate', 'invalid'), 'Non-numeric value throws error');
+
 // Test updateValue
 collateral1.updateValue(550000);
 assert(collateral1.value === 550000, 'Collateral value can be updated');
+
+// Test updateValue validation
+assertThrows(() => collateral1.updateValue(-100), 'Negative value update throws error');
+assertThrows(() => collateral1.updateValue('invalid'), 'Non-numeric value update throws error');
 
 // Test updateStatus
 collateral1.updateStatus('released');

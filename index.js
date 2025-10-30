@@ -4,6 +4,15 @@
  */
 class Collateral {
   constructor(id, type, value, description = '') {
+    if (!id || typeof id !== 'string') {
+      throw new Error('ID is required and must be a string');
+    }
+    if (!type || typeof type !== 'string') {
+      throw new Error('Type is required and must be a string');
+    }
+    if (typeof value !== 'number' || value < 0) {
+      throw new Error('Value must be a non-negative number');
+    }
     this.id = id;
     this.type = type; // e.g., 'real-estate', 'vehicle', 'securities', 'cash'
     this.value = value;
@@ -17,6 +26,9 @@ class Collateral {
    * Update the value of the collateral
    */
   updateValue(newValue) {
+    if (typeof newValue !== 'number' || newValue < 0) {
+      throw new Error('Value must be a non-negative number');
+    }
     this.value = newValue;
     this.updatedAt = new Date();
   }
