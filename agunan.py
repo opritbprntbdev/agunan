@@ -11,12 +11,14 @@ class Agunan:
     
     def add_item(self, item):
         """Add a collateral item"""
+        if item is None or (isinstance(item, str) and not item.strip()):
+            return False
         self.items.append(item)
         return True
     
     def get_items(self):
         """Get all collateral items"""
-        return self.items
+        return self.items.copy()
     
     def remove_item(self, item):
         """Remove a collateral item"""

@@ -30,6 +30,33 @@ class TestAgunan(unittest.TestCase):
         self.agunan.add_item("Land")
         self.assertEqual(len(self.agunan.get_items()), 3)
     
+    def test_add_invalid_item_none(self):
+        """Test adding None as an item"""
+        result = self.agunan.add_item(None)
+        self.assertFalse(result)
+        self.assertEqual(len(self.agunan.get_items()), 0)
+    
+    def test_add_invalid_item_empty_string(self):
+        """Test adding empty string as an item"""
+        result = self.agunan.add_item("")
+        self.assertFalse(result)
+        self.assertEqual(len(self.agunan.get_items()), 0)
+    
+    def test_add_invalid_item_whitespace(self):
+        """Test adding whitespace-only string as an item"""
+        result = self.agunan.add_item("   ")
+        self.assertFalse(result)
+        self.assertEqual(len(self.agunan.get_items()), 0)
+    
+    def test_get_items_returns_copy(self):
+        """Test that get_items returns a copy, not the original list"""
+        self.agunan.add_item("House")
+        items = self.agunan.get_items()
+        items.append("Car")
+        # The original list should not be modified
+        self.assertEqual(len(self.agunan.get_items()), 1)
+        self.assertNotIn("Car", self.agunan.get_items())
+    
     def test_remove_item(self):
         """Test removing an item"""
         self.agunan.add_item("House")
