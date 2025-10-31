@@ -8,7 +8,9 @@ Ringkas
 - Finalisasi batch (buat PDF): process/finalize_batch.php
 - Penyimpanan foto: uploads/YYYY/MM/foto_{agunan_data_id}_{order}_{timestamp}.jpg
 - DB: Insert ke agunan_data (jika baru) dan agunan_foto; total_foto ikut diupdate
-
+- pakai cloud fire untuk HTTPS : unuk aksesnya saya taruh cloud fire di download / C caranya : 
+.\cloudflared.exe tunnel --url http://localhost:80 - jika wamp tunel 80 portnya
+.\cloudflared.exe tunnel --url http://localhost:8080 - jika wamp tunel 8080 portnya
 Cara pakai cepat
 1) Login di index.php
 2) Buka UI batch: /agunan-capture/ui/capture_batch.php (disarankan)
