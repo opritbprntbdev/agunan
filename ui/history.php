@@ -14,25 +14,24 @@ if ($res) { while($r = $res->fetch_assoc()) $rows[] = $r; }
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Riwayat Batch</title>
   <style>
-    :root{color-scheme:light dark}
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#0b0e14;color:#e6edf3}
-    header{padding:12px 16px;background:#0d3d88;color:#fff;display:flex;justify-content:space-between;align-items:center}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f5f5;color:#333}
+    header{padding:12px 16px;background:#2563eb;color:#fff;display:flex;justify-content:space-between;align-items:center}
     .wrap{padding:12px;max-width:820px;margin:0 auto}
     .actions a{display:inline-block;text-decoration:none}
-    .btn{padding:12px 14px;border-radius:12px;border:1px solid #355cac;background:#1e3a8a;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
-    .btn.secondary{background:#0b1220;border-color:#334155;color:#cbd5e1}
-    .badge{padding:4px 8px;border-radius:999px;background:#0b1220;border:1px solid #334155;font-size:12px}
+    .btn{padding:12px 14px;border-radius:12px;border:1px solid #2563eb;background:#2563eb;color:#fff;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn.secondary{background:#fff;border-color:#ddd;color:#333}
+    .badge{padding:4px 8px;border-radius:999px;background:#f5f5f5;border:1px solid #ddd;font-size:12px;color:#666}
     .list{display:grid;grid-template-columns:1fr;gap:12px}
-    .item{background:#0f172a;border:1px solid #24304a;border-radius:14px;overflow:hidden}
+    .item{background:#fff;border:1px solid #ddd;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.1)}
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .item .head{padding:12px;border-bottom:1px solid #24304a}
-    .title{font-weight:700}
-    .sub{color:#94a3b8;font-size:13px}
+    .item .head{padding:12px;border-bottom:1px solid #eee}
+    .title{font-weight:700;color:#333}
+    .sub{color:#666;font-size:13px}
     .meta{padding:0 12px 12px 12px;display:flex;gap:8px;flex-wrap:wrap}
-    .foot{padding:12px;border-top:1px solid #24304a}
+    .foot{padding:12px;border-top:1px solid #eee}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-    .empty{padding:24px;text-align:center;color:#94a3b8}
+    .empty{padding:24px;text-align:center;color:#999}
     @media (min-width:720px){ .grid2{grid-template-columns:140px 140px;justify-content:end} }
   </style>
   </head>

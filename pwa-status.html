@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 PWA Ready - Agunan Capture</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #2563eb; margin-bottom: 20px; font-size: 28px; }
+        .success { 
+            background: #dcfce7; 
+            border: 2px solid #22c55e; 
+            padding: 20px; 
+            border-radius: 12px; 
+            margin: 20px 0;
+        }
+        .success h2 { color: #16a34a; font-size: 20px; margin-bottom: 10px; }
+        .step {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .step strong { color: #1e40af; }
+        .note {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin: 5px;
+            font-weight: 600;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .code {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        ul { margin-left: 20px; margin-top: 10px; }
+        li { margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎉 PWA Setup Selesai!</h1>
+        
+        <div class="success">
+            <h2>✅ File yang sudah dibuat:</h2>
+            <ul>
+                <li><code>manifest.json</code> - App metadata</li>
+                <li><code>sw.js</code> - Service Worker</li>
+                <li><code>generate-icons.html</code> - Icon generator</li>
+                <li>Meta tags PWA di index.php & home.php</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <strong>STEP 1:</strong> Generate Icon (Opsional)
+            <br><a href="generate-icons.html" class="btn">🎨 Generate Icons</a>
+            <br><small>Download 2 file PNG, lalu upload ke folder <code>assets/</code></small>
+        </div>
+
+        <div class="step">
+            <strong>STEP 2:</strong> Jalankan Cloudflare Tunnel
+            <div class="code">
+cd C:\cloudflared<br>
+.\cloudflared.exe tunnel --url http://localhost:80
+            </div>
+            <small>Catat URL HTTPS yang muncul</small>
+        </div>
+
+        <div class="step">
+            <strong>STEP 3:</strong> Buka di HP Samsung
+            <ul>
+                <li>Buka <strong>Samsung Internet</strong> atau <strong>Chrome</strong></li>
+                <li>Ketik URL tunnel: <code>https://xxx.trycloudflare.com/agunan-capture/</code></li>
+                <li>Login</li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <strong>STEP 4:</strong> Install PWA
+            <ul>
+                <li>Klik menu <strong>(⋮)</strong> → <strong>"Add to Home screen"</strong></li>
+                <li>Atau tunggu popup install otomatis muncul</li>
+                <li>Klik <strong>"Install"</strong> atau <strong>"Add"</strong></li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>⚠️ PENTING:</strong>
+            <ul>
+                <li>Tunnel harus <strong>running</strong> saat install pertama kali</li>
+                <li>Camera akan <strong>langsung jalan</strong> setelah install (via HTTPS)</li>
+                <li>App muncul di home screen seperti app native</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="index.php" class="btn">🏠 Ke Halaman Login</a>
+            <a href="PWA-INSTALL-GUIDE.md" class="btn" download>📄 Download Guide Lengkap</a>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280;">
+            <small>
+                Agunan Capture v2.0 · PWA Edition<br>
+                Bank KPNO © 2025
+            </small>
+        </div>
+    </div>
+
+    <script>
+        // Auto-detect if already installed as PWA
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+            document.body.innerHTML = `
+                <div class="container" style="text-align: center;">
+                    <h1 style="color: #22c55e;">✅ App Sudah Terinstall!</h1>
+                    <p style="margin: 20px 0; font-size: 18px;">
+                        Kamu sudah membuka app dalam mode PWA.<br>
+                        Camera harusnya bisa jalan dengan lancar!
+                    </p>
+                    <a href="index.php" class="btn" style="font-size: 18px;">🚀 Mulai Gunakan App</a>
+                </div>
+            `;
+        }
+
+        // Check Service Worker status
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(reg => {
+                if (reg) {
+                    console.log('✅ Service Worker active:', reg.scope);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

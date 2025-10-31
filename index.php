@@ -11,10 +11,25 @@ if (isset($_SESSION['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Agunan Capture">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#3475ca">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="description" content="Sistem Input Data Agunan Mobile untuk Bank KPNO">
+    
+    <!-- Force fullscreen on Android -->
+    <meta name="mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="assets/icon-192.svg">
+    <link rel="apple-touch-icon" href="assets/icon-192.svg">
+    
     <title>📱 Login Agunan Capture</title>
     <link rel="stylesheet" href="assets/css/style.css">
     <style>
@@ -28,7 +43,7 @@ if (isset($_SESSION['login'])) {
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f5f5;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -39,15 +54,14 @@ if (isset($_SESSION['login'])) {
         }
 
         .mobile-login-container {
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+            background: #fff;
             border-radius: 20px;
             padding: 32px 24px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             animation: slideUp 0.6s ease-out;
-            border: 1px solid rgba(255,255,255,0.2);
+            border: 1px solid #ddd;
         }
 
         @keyframes slideUp {
@@ -99,8 +113,8 @@ if (isset($_SESSION['login'])) {
         }
 
         .mobile-error {
-            background: linear-gradient(135deg, #ffe6e6 0%, #ffcccc 100%);
-            border: 2px solid #ff9999;
+            background: #fee;
+            border: 2px solid #fcc;
             color: #d32f2f;
             padding: 16px;
             border-radius: 12px;
@@ -108,7 +122,6 @@ if (isset($_SESSION['login'])) {
             font-size: 14px;
             text-align: center;
             animation: shake 0.5s ease-out;
-            box-shadow: 0 4px 15px rgba(211, 47, 47, 0.2);
         }
 
         @keyframes shake {
@@ -132,21 +145,20 @@ if (isset($_SESSION['login'])) {
         .mobile-input {
             width: 100%;
             padding: 16px 20px;
-            border: 2px solid #e1e8ed;
+            border: 2px solid #ddd;
             border-radius: 12px;
             font-size: 16px; /* Prevent zoom on iOS */
             transition: all 0.3s ease;
-            background: rgba(248,249,250,0.8);
+            background: #fff;
             -webkit-appearance: none;
             appearance: none;
         }
 
         .mobile-input:focus {
             outline: none;
-            border-color: #3475ca;
+            border-color: #2563eb;
             background: white;
-            box-shadow: 0 0 0 4px rgba(52, 117, 202, 0.1);
-            transform: translateY(-1px);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
         }
 
         .password-wrapper {
@@ -174,7 +186,7 @@ if (isset($_SESSION['login'])) {
 
         .mobile-login-btn {
             width: 100%;
-            background: linear-gradient(135deg, #3475ca 0%, #2563eb 100%);
+            background: #2563eb;
             color: white;
             border: none;
             padding: 18px;
@@ -183,7 +195,6 @@ if (isset($_SESSION['login'])) {
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(52, 117, 202, 0.4);
             margin-top: 8px;
             min-height: 56px;
             display: flex;
@@ -193,15 +204,12 @@ if (isset($_SESSION['login'])) {
         }
 
         .mobile-login-btn:active {
-            transform: translateY(2px);
-            box-shadow: 0 6px 20px rgba(52, 117, 202, 0.5);
+            background: #1d4ed8;
         }
 
         .mobile-login-btn:disabled {
-            background: #bdc3c7;
+            background: #ccc;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
             opacity: 0.7;
         }
 
@@ -496,12 +504,34 @@ if (isset($_SESSION['login'])) {
             }
         });
 
-        // PWA-like experience
+        // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // Could register service worker here
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker registered:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('❌ Service Worker registration failed:', error);
+                    });
             });
         }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            console.log('💾 PWA installable');
+            
+            // Optional: Show custom install button
+            // You can add UI here to prompt user to install
+        });
+
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA installed successfully');
+            deferredPrompt = null;
+        });
 
         // Network status
         window.addEventListener('online', function() {

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 Cara Hilangkan Address Bar</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { color: #2563eb; margin-bottom: 20px; font-size: 24px; }
+        .step {
+            background: #f8fafc;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .step strong { color: #1e40af; display: block; margin-bottom: 8px; }
+        .warning {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .warning strong { color: #92400e; }
+        .success {
+            background: #dcfce7;
+            border: 2px solid #22c55e;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+        .success strong { color: #166534; }
+        .btn {
+            display: inline-block;
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin: 5px;
+            font-weight: 600;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .btn.danger { background: #dc2626; }
+        .btn.danger:hover { background: #b91c1c; }
+        img { max-width: 100%; border-radius: 8px; margin: 10px 0; }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #1e40af;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .comparison div {
+            text-align: center;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        .before { background: #fee; }
+        .after { background: #dcfce7; }
+        @media (max-width: 600px) {
+            .comparison { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Cara Hilangkan Address Bar di PWA</h1>
+        
+        <p style="margin-bottom: 20px; color: #666;">
+            Address bar (URL bar) akan <strong>hilang otomatis</strong> setelah PWA di-install ulang dengan manifest baru.
+        </p>
+
+        <div class="comparison">
+            <div class="before">
+                <strong style="color: #dc2626;">❌ Sebelum (Ada Bar)</strong>
+                <p style="font-size: 13px; margin-top: 5px;">Browser mode<br>Ada URL bar di atas</p>
+            </div>
+            <div class="after">
+                <strong style="color: #16a34a;">✅ Sesudah (Full Screen)</strong>
+                <p style="font-size: 13px; margin-top: 5px;">App mode<br>Tidak ada URL bar</p>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ PENTING:</strong>
+            <p>Address bar HANYA HILANG jika PWA sudah di-<strong>INSTALL</strong> (bukan dibuka via browser biasa).</p>
+        </div>
+
+        <h2 style="color: #2563eb; margin-top: 30px; font-size: 18px;">🔄 Langkah-Langkah:</h2>
+
+        <div class="step">
+            <strong>STEP 1: Uninstall PWA Lama</strong>
+            Di HP Samsung:
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Tahan icon <code>Agunan Capture</code> di home screen</li>
+                <li>Pilih <strong>"Uninstall"</strong> atau <strong>"Hapus"</strong></li>
+            </ul>
+        </div>
+
+        <div class="step">
+            <strong>STEP 2: Clear Cache</strong>
+            <a href="clear-sw.html" class="btn danger">🗑️ Buka Clear Cache</a>
+            <p style="margin-top: 10px; font-size: 14px; color: #666;">
+                Klik tombol "Clear All Cache & Unregister SW"
+            </p>
+        </div>
+
+        <div class="step">
+            <strong>STEP 3: Install Ulang PWA</strong>
+            <ol style="margin-left: 20px; margin-top: 8px;">
+                <li>Buka Samsung Internet</li>
+                <li>Ketik URL tunnel (misalnya: <code>https://hero-dig...trycloudflare.com/agunan-capture/</code>)</li>
+                <li>Login</li>
+                <li>Klik menu <strong>(⋮)</strong> → <strong>"Add to Home screen"</strong></li>
+                <li>Install</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <strong>STEP 4: Buka dari Icon (Bukan Browser!)</strong>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Tutup browser</li>
+                <li>Buka <strong>icon Agunan Capture</strong> dari home screen</li>
+                <li><strong>Address bar HILANG!</strong> ✅</li>
+            </ul>
+        </div>
+
+        <div class="success">
+            <strong>✅ Hasil Akhir:</strong>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>Tidak ada URL bar di atas</li>
+                <li>Full screen seperti app native</li>
+                <li>Terlihat sangat mobile/APK</li>
+                <li>Status bar hitam transparan</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>🔍 Cara Cek Berhasil atau Tidak:</strong>
+            <p style="margin-top: 8px;">
+                Jika kamu membuka dari <strong>icon home screen</strong> dan masih ada address bar, berarti:
+            </p>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li>❌ Dibuka via browser (bukan PWA installed)</li>
+                <li>✅ Harus uninstall → clear cache → install ulang</li>
+            </ul>
+        </div>
+
+        <h2 style="color: #2563eb; margin-top: 30px; font-size: 18px;">📝 Catatan Teknis:</h2>
+        
+        <div class="step">
+            <strong>Manifest Updated:</strong>
+            <ul style="margin-left: 20px; margin-top: 8px;">
+                <li><code>"display": "standalone"</code> ✅</li>
+                <li><code>"display_override": ["standalone", "fullscreen"]</code> ✅</li>
+                <li><code>"apple-mobile-web-app-status-bar-style": "black-translucent"</code> ✅</li>
+            </ul>
+            <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                Setting ini memastikan PWA buka dalam mode fullscreen tanpa browser chrome.
+            </p>
+        </div>
+
+        <div style="margin-top: 30px; text-align: center;">
+            <a href="index.php" class="btn">🏠 Ke Login</a>
+            <a href="pwa-check.html" class="btn">🔍 Check PWA Status</a>
+        </div>
+
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 13px;">
+            <strong>💡 Tips:</strong> Setelah install, share icon ke teman cukup dengan klik "Share" dari home screen menu!
+        </div>
+    </div>
+</body>
+</html>

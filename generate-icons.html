@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate PWA Icons</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: Arial; }
+        canvas { border: 1px solid #ddd; margin: 10px; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🏦 PWA Icon Generator</h2>
+    <p>Klik tombol untuk download icon (nanti upload ke folder assets/)</p>
+    
+    <canvas id="icon192" width="192" height="192"></canvas>
+    <canvas id="icon512" width="512" height="512"></canvas>
+    
+    <div>
+        <button onclick="downloadIcon(192)">⬇️ Download 192x192</button>
+        <button onclick="downloadIcon(512)">⬇️ Download 512x512</button>
+    </div>
+
+    <script>
+        function drawIcon(size) {
+            const canvas = document.getElementById('icon' + size);
+            const ctx = canvas.getContext('2d');
+            
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#2563eb');
+            gradient.addColorStop(1, '#1d4ed8');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Bank icon (emoji-like)
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.4}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🏦', size / 2, size / 2);
+            
+            // Text
+            ctx.font = `bold ${size * 0.12}px Arial`;
+            ctx.fillText('AGUNAN', size / 2, size * 0.8);
+        }
+
+        function downloadIcon(size) {
+            const canvas = document.getElementById('icon' + size);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Draw on load
+        drawIcon(192);
+        drawIcon(512);
+    </script>
+</body>
+</html>

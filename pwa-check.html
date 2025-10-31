@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="manifest.json">
+    <title>PWA Check</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2563eb; margin-bottom: 20px; font-size: 24px; }
+        .check-item {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+            border-left: 4px solid #ddd;
+        }
+        .check-item.pass {
+            background: #dcfce7;
+            border-left-color: #22c55e;
+        }
+        .check-item.fail {
+            background: #fee;
+            border-left-color: #dc2626;
+        }
+        .check-item.warn {
+            background: #fef3c7;
+            border-left-color: #f59e0b;
+        }
+        .label { font-weight: 600; margin-bottom: 4px; }
+        .value { font-size: 14px; color: #666; font-family: monospace; }
+        .btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn:hover { background: #1d4ed8; }
+        .install-banner {
+            background: #2563eb;
+            color: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin: 20px 0;
+            text-align: center;
+            display: none;
+        }
+        .install-banner.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 PWA Installability Check</h1>
+        
+        <div id="install-banner" class="install-banner">
+            <p style="margin-bottom: 10px;">✅ PWA siap di-install!</p>
+            <button class="btn" onclick="installPWA()">📥 Install Sekarang</button>
+        </div>
+
+        <div id="checks"></div>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <button class="btn" onclick="runCheck()">🔄 Check Ulang</button>
+            <a href="index.php" class="btn" style="display: inline-block; text-decoration: none;">🏠 Ke Login</a>
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        const checksDiv = document.getElementById('checks');
+        const installBanner = document.getElementById('install-banner');
+
+        // Capture install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.classList.add('show');
+            addCheck('Install Prompt', 'PWA installable! Banner ditampilkan.', 'pass');
+        });
+
+        function addCheck(label, value, status = 'pass') {
+            const div = document.createElement('div');
+            div.className = `check-item ${status}`;
+            div.innerHTML = `
+                <div class="label">${status === 'pass' ? '✅' : status === 'fail' ? '❌' : '⚠️'} ${label}</div>
+                <div class="value">${value}</div>
+            `;
+            checksDiv.appendChild(div);
+        }
+
+        async function runCheck() {
+            checksDiv.innerHTML = '';
+
+            // Check HTTPS
+            const isHTTPS = window.location.protocol === 'https:';
+            addCheck('HTTPS', isHTTPS ? 'Ya (Required)' : 'Tidak (PWA butuh HTTPS!)', isHTTPS ? 'pass' : 'fail');
+
+            // Check Service Worker
+            if ('serviceWorker' in navigator) {
+                addCheck('Service Worker Support', 'Ya', 'pass');
+                
+                try {
+                    const reg = await navigator.serviceWorker.getRegistration();
+                    if (reg) {
+                        addCheck('Service Worker Registered', `Ya (${reg.scope})`, 'pass');
+                        addCheck('SW State', reg.active ? reg.active.state : 'No active', reg.active ? 'pass' : 'warn');
+                    } else {
+                        addCheck('Service Worker Registered', 'Tidak (akan auto-register)', 'warn');
+                    }
+                } catch (e) {
+                    addCheck('Service Worker Check', 'Error: ' + e.message, 'fail');
+                }
+            } else {
+                addCheck('Service Worker Support', 'Tidak (Browser tidak support)', 'fail');
+            }
+
+            // Check Manifest
+            try {
+                const response = await fetch('manifest.json');
+                if (response.ok) {
+                    const manifest = await response.json();
+                    addCheck('Manifest', `✅ Loaded (${manifest.name})`, 'pass');
+                    addCheck('Icons', `${manifest.icons?.length || 0} icon(s)`, manifest.icons?.length >= 2 ? 'pass' : 'warn');
+                    addCheck('Start URL', manifest.start_url || 'Not set', manifest.start_url ? 'pass' : 'warn');
+                    addCheck('Display Mode', manifest.display || 'Not set', manifest.display === 'standalone' ? 'pass' : 'warn');
+                } else {
+                    addCheck('Manifest', 'Gagal load (HTTP ' + response.status + ')', 'fail');
+                }
+            } catch (e) {
+                addCheck('Manifest', 'Error: ' + e.message, 'fail');
+            }
+
+            // Check if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                addCheck('Installation Status', 'Sudah terinstall sebagai PWA', 'pass');
+            } else {
+                addCheck('Installation Status', 'Belum terinstall (buka via browser)', 'warn');
+            }
+
+            // Check install prompt captured
+            if (deferredPrompt) {
+                addCheck('Install Prompt Ready', 'Ya, siap di-install', 'pass');
+            } else {
+                addCheck('Install Prompt', 'Belum muncul (tunggu beberapa detik)', 'warn');
+            }
+        }
+
+        async function installPWA() {
+            if (!deferredPrompt) {
+                alert('Install prompt belum siap. Tunggu beberapa detik lalu coba lagi.');
+                return;
+            }
+
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            
+            if (outcome === 'accepted') {
+                alert('✅ PWA berhasil diinstall!');
+                installBanner.classList.remove('show');
+            } else {
+                alert('❌ Install dibatalkan');
+            }
+            
+            deferredPrompt = null;
+        }
+
+        // Auto-register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('✅ SW registered:', reg.scope))
+                .catch(err => console.log('❌ SW registration failed:', err));
+        }
+
+        // Run check on load
+        window.addEventListener('load', () => {
+            setTimeout(runCheck, 500);
+        });
+    </script>
+</body>
+</html>
