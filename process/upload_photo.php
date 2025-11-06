@@ -42,6 +42,12 @@ $user_id = $_SESSION['user_id'] ?? 0;
 $created_by = $_SESSION['username'] ?? 'unknown';
 $nama_kc = $_SESSION['nama_kc'] ?? '';
 
+// Parse verified_data dari JSON jika ada
+$verified_data = null;
+if (isset($_POST['verified_data']) && !empty($_POST['verified_data'])) {
+    $verified_data = json_decode($_POST['verified_data'], true);
+}
+
 // Pastikan folder upload
 $year = date('Y');
 $month = date('m');
@@ -60,16 +66,79 @@ if (!$agunan_data_id) {
     // Buat nama PDF placeholder (sesuai pola yang ada)
     $ts = date('YmdHis');
     $pdf_filename = 'agunan_' . $conn->real_escape_string($id_agunan) . '_' . $ts . '.pdf';
-    $pdf_path_rel = 'pdf/' . $year . '/' . $month . '/' . $pdf_filename; // folder mungkin belum ada; generasi PDF bukan di endpoint ini
-
-    $stmt = $conn->prepare("INSERT INTO agunan_data (id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, pdf_filename, pdf_path, total_foto) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)");
-    if (!$stmt) {
-        echo json_encode(['success' => false, 'message' => 'DB error: ' . $conn->error]);
-        exit;
+    $pdf_path_rel = 'pdf/' . $year . '/' . $month . '/' . $pdf_filename;
+    
+    // Jika ada data verified dari IBS, simpan semua field
+    if ($verified_data) {
+        $stmt = $conn->prepare("
+            INSERT INTO agunan_data (
+                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, 
+                pdf_filename, pdf_path, total_foto,
+                agunan_id_ibs, kode_jenis_agunan, deskripsi_ringkas,
+                tanah_no_shm, tanah_no_shgb, tanah_tgl_sertifikat, tanah_luas, 
+                tanah_nama_pemilik, tanah_lokasi,
+                kend_jenis, kend_merk, kend_tahun, kend_no_polisi,
+                verified_from_ibs, verified_at, verified_by, photo_taken_by, photo_taken_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, NOW())
+        ");
+        
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'DB error: ' . $conn->error]);
+            exit;
+        }
+        
+        // Type string: 25 parameters total
+        // s=string, i=integer, d=decimal
+        $stmt->bind_param(
+            'sssissssssssssdsssssssss',
+            $id_agunan,                         // s
+            $nama_nasabah,                      // s
+            $no_rek,                            // s
+            $user_id,                           // i
+            $created_by,                        // s
+            $nama_kc,                           // s
+            $pdf_filename,                      // s
+            $pdf_path_rel,                      // s
+            $verified_data['agunan_id'],        // s
+            $verified_data['kode_jenis_agunan'], // s
+            $verified_data['deskripsi_ringkas'], // s
+            $verified_data['tanah_no_shm'],     // s
+            $verified_data['tanah_no_shgb'],    // s
+            $verified_data['tanah_tgl_sertifikat'], // s
+            $verified_data['tanah_luas'],       // d
+            $verified_data['tanah_nama_pemilik'], // s
+            $verified_data['tanah_lokasi'],     // s
+            $verified_data['kend_jenis'],       // s
+            $verified_data['kend_merk'],        // s
+            $verified_data['kend_tahun'],       // s
+            $verified_data['kend_no_polisi'],   // s
+            $verified_data['verified_at'],      // s
+            $verified_data['verified_by'],      // s
+            $created_by                         // s (photo_taken_by)
+        );
+        
+    } else {
+        // Mode manual - hanya field dasar
+        $stmt = $conn->prepare("
+            INSERT INTO agunan_data (
+                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, 
+                pdf_filename, pdf_path, total_foto, verified_from_ibs, photo_taken_by, photo_taken_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NOW())
+        ");
+        
+        if (!$stmt) {
+            echo json_encode(['success' => false, 'message' => 'DB error: ' . $conn->error]);
+            exit;
+        }
+        
+        $stmt->bind_param('sssisssss', 
+            $id_agunan, $nama_nasabah, $no_rek, $user_id, $created_by, $nama_kc, 
+            $pdf_filename, $pdf_path_rel, $created_by
+        );
     }
-    $stmt->bind_param('sssissss', $id_agunan, $nama_nasabah, $no_rek, $user_id, $created_by, $nama_kc, $pdf_filename, $pdf_path_rel);
+    
     if (!$stmt->execute()) {
-        echo json_encode(['success' => false, 'message' => 'Gagal membuat agunan_data']);
+        echo json_encode(['success' => false, 'message' => 'Gagal membuat agunan_data: ' . $stmt->error]);
         exit;
     }
     $agunan_data_id = (int)$stmt->insert_id;
@@ -102,12 +171,12 @@ if (!move_uploaded_file($tmp, $destAbs)) {
 }
 
 // Insert agunan_foto
-$stmt = $conn->prepare('INSERT INTO agunan_foto (agunan_data_id, foto_filename, foto_path, keterangan, file_size, foto_order) VALUES (?, ?, ?, ?, ?, ?)');
+$stmt = $conn->prepare('INSERT INTO agunan_foto (agunan_data_id, foto_filename, foto_path, keterangan, file_size, foto_order, uploaded_by) VALUES (?, ?, ?, ?, ?, ?, ?)');
 if (!$stmt) {
     echo json_encode(['success' => false, 'message' => 'DB error: ' . $conn->error]);
     exit;
 }
-$stmt->bind_param('isssii', $agunan_data_id, $filename, $destRel, $ket, $fileSize, $next_order);
+$stmt->bind_param('isssiis', $agunan_data_id, $filename, $destRel, $ket, $fileSize, $next_order, $created_by);
 if (!$stmt->execute()) {
     echo json_encode(['success' => false, 'message' => 'Gagal insert foto']);
     exit;

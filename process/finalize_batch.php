@@ -104,6 +104,19 @@ $stmt->bind_param('ssi', $pdfFilename, $pdfPathRel, $agunan_data_id);
 $stmt->execute();
 $stmt->close();
 
-echo json_encode(['success' => true, 'pdf_filename' => $pdfFilename, 'pdf_path' => $pdfPathRel]);
+// Ambil username dari session untuk notifikasi
+$username = $_SESSION['username'] ?? 'User';
+$jumlahFoto = count($photos);
+
+echo json_encode([
+    'success' => true, 
+    'pdf_filename' => $pdfFilename, 
+    'pdf_path' => $pdfPathRel,
+    'notification' => [
+        'username' => $username,
+        'id_agunan' => $id_agunan,
+        'jumlah_foto' => $jumlahFoto
+    ]
+]);
 exit;
 ?>

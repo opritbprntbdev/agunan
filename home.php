@@ -113,7 +113,7 @@ $username = $_SESSION['username'] ?? '';
 <body>
   <div class="card">
     <div class="head">
-      <div>🏦 Agunan Capture</div>
+      <div>🏦 Pilih Modul </div>
       <a class="logout" href="logout.php">Logout</a>
     </div>
     <div class="body">
@@ -121,8 +121,10 @@ $username = $_SESSION['username'] ?? '';
         <strong><?= htmlspecialchars($nama_kc) ?></strong>
       </p>
       <div class="grid">
-        <a class="btn" href="ui/capture_batch.php">� Batch Capture (disarankan)</a>
-        <a class="btn secondary" href="ui/history.php">📄 Riwayat (Preview/Download PDF)</a>
+        <a class="btn" href="ui/capture_batch.php">Voucher Capture</a>
+        <a class="btn" href="ui/capture_batch.php">Agunan Capture</a>
+        <a class="btn secondary" href="ui/history.php">📄 Riwayat <br>(Preview/Download PDF)</a>
+
         <!-- <a class="btn secondary" href="ui/capture.php">📸 Kamera Single (lama)</a> -->
         <!-- <a class="btn secondary" href="form.php">📝 Form Klasik (upload file)</a> -->
       </div>
@@ -130,10 +132,19 @@ $username = $_SESSION['username'] ?? '';
         sebagian perangkat.</p>
     </div>
     <div class="foot">
-      <span class="small">© <?= date('Y') ?> · Agunan Capture</span>
+      <span class="small">© <?= date('Y') ?> · Module Capture</span>
       <span class="small">Versi UI Mobile</span>
     </div>
   </div>
+
+  <script>
+    // Request notification permission saat halaman load
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(permission => {
+        console.log('Notification permission:', permission);
+      });
+    }
+  </script>
 </body>
 
 </html>
