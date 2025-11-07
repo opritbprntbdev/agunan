@@ -6,6 +6,7 @@ if (!isset($_SESSION['login'])) {
 }
 $nama_kc = $_SESSION['nama_kc'] ?? '';
 $username = $_SESSION['username'] ?? '';
+$kode_kantor = $_SESSION['kode_kantor'] ?? '000';
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -14,6 +15,8 @@ $username = $_SESSION['username'] ?? '';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <title>Agunan Capture - Home</title>
   <style>
@@ -118,7 +121,11 @@ $username = $_SESSION['username'] ?? '';
     </div>
     <div class="body">
       <p class="hello">User: <strong><?= htmlspecialchars($username) ?></strong> · KC:
-        <strong><?= htmlspecialchars($nama_kc) ?></strong>
+        <strong><?= htmlspecialchars($nama_kc) ?></strong> · Kode:
+        <strong><?= htmlspecialchars($kode_kantor) ?></strong>
+        <?php if ($kode_kantor === '000'): ?>
+          <span style="background:#10b981;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;margin-left:4px">ADMIN</span>
+        <?php endif; ?>
       </p>
       <div class="grid">
         <a class="btn" href="ui/capture_batch.php">Voucher Capture</a>

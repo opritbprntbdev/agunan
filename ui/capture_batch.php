@@ -14,6 +14,11 @@ $username = $_SESSION['username'] ?? '';
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Batch Capture Agunan</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <style>
     * {
       box-sizing: border-box
@@ -361,11 +366,13 @@ $username = $_SESSION['username'] ?? '';
           // Enable tombol foto
           els.captureBtn.disabled = false;
           els.finishBtn.disabled = false;
-          els.status.textContent = 'Verified ✅ - Siap foto';
-          els.hint.textContent = '2. Data agunan berhasil diverifikasi dari IBS. Mulai foto berkas agunan.';
+          els.status.textContent = 'Sedang membuka kamera...';
+          els.hint.textContent = '2. Data agunan berhasil diverifikasi dari IBS. Membuka kamera...';
 
-          // Auto-open camera
-          openCamera();
+          // Auto-open camera setelah verifikasi berhasil
+          await openCamera();
+          els.status.textContent = 'Kamera siap ✅ - Mulai foto';
+          els.hint.textContent = '2. Kamera siap. Arahkan ke berkas agunan lalu klik tombol 📷 Foto.';
 
         } else {
           // Data tidak ditemukan atau error
@@ -478,16 +485,20 @@ $username = $_SESSION['username'] ?? '';
     }
 
     // Switch ke mode manual input
-    function switchToManualMode() {
+    async function switchToManualMode() {
       verifiedData = null;
       els.verifiedInfo.style.display = 'none';
       els.manualInputs.style.display = 'flex';
       els.captureBtn.disabled = false;
       els.finishBtn.disabled = false;
-      els.status.textContent = 'Manual Mode - Siap foto';
-      els.hint.textContent = 'Mode manual: Isi data agunan lalu foto berkas.';
+      els.status.textContent = 'Membuka kamera...';
+      els.hint.textContent = 'Mode manual: Membuka kamera...';
       els.idAgunan.focus();
-      openCamera();
+      
+      // Buka kamera
+      await openCamera();
+      els.status.textContent = 'Kamera siap ✅ - Manual Mode';
+      els.hint.textContent = 'Mode manual: Isi data agunan di bawah, lalu mulai foto.';
     }
 
     function setStatus(t) { els.status.textContent = t; }
@@ -659,7 +670,12 @@ $username = $_SESSION['username'] ?? '';
 
     // wire event listeners
     els.verifyBtn.addEventListener('click', verifyAgunan);
-    els.switchBtn.addEventListener('click', () => { usingBack = !usingBack; openCamera(); });
+    els.switchBtn.addEventListener('click', async () => { 
+      usingBack = !usingBack; 
+      setStatus('Membuka kamera...');
+      await openCamera(); 
+      setStatus('Kamera siap ✅');
+    });
     els.captureBtn.addEventListener('click', capture);
     els.finishBtn.addEventListener('click', toReview);
     els.backToCamera.addEventListener('click', backCamera);

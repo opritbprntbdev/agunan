@@ -2,7 +2,7 @@
   "name": "Agunan Capture - KPNO",
   "short_name": "Agunan",
   "description": "Sistem Input Data Agunan Mobile untuk Bank",
-  "start_url": "/agunan-capture/index.php",
+  "start_url": "/agunan-capture/",
   "scope": "/agunan-capture/",
   "display": "standalone",
   "display_override": ["standalone", "fullscreen"],

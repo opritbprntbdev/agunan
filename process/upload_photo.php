@@ -41,6 +41,7 @@ if (!isset($_FILES['image']) || $_FILES['image']['error'] !== UPLOAD_ERR_OK) {
 $user_id = $_SESSION['user_id'] ?? 0;
 $created_by = $_SESSION['username'] ?? 'unknown';
 $nama_kc = $_SESSION['nama_kc'] ?? '';
+$kode_kantor = $_SESSION['kode_kantor'] ?? '000'; // TAMBAH: Ambil kode kantor dari session
 
 // Parse verified_data dari JSON jika ada
 $verified_data = null;
@@ -72,14 +73,14 @@ if (!$agunan_data_id) {
     if ($verified_data) {
         $stmt = $conn->prepare("
             INSERT INTO agunan_data (
-                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, 
+                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, kode_kantor,
                 pdf_filename, pdf_path, total_foto,
-                agunan_id_ibs, kode_jenis_agunan, deskripsi_ringkas,
+                agunan_id_ibs, kode_jenis_agunan, cif, nama_nasabah_ibs, alamat_nasabah_ibs, deskripsi_ringkas,
                 tanah_no_shm, tanah_no_shgb, tanah_tgl_sertifikat, tanah_luas, 
                 tanah_nama_pemilik, tanah_lokasi,
                 kend_jenis, kend_merk, kend_tahun, kend_no_polisi,
                 verified_from_ibs, verified_at, verified_by, photo_taken_by, photo_taken_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, NOW())
         ");
         
         if (!$stmt) {
@@ -87,20 +88,24 @@ if (!$agunan_data_id) {
             exit;
         }
         
-        // Type string: 25 parameters total
+        // Type string: 29 parameters total (tambah 1: kode_kantor)
         // s=string, i=integer, d=decimal
         $stmt->bind_param(
-            'sssissssssssssdsssssssss',
+            'ssisssssssssssssssdsssssssss',
             $id_agunan,                         // s
             $nama_nasabah,                      // s
             $no_rek,                            // s
             $user_id,                           // i
             $created_by,                        // s
             $nama_kc,                           // s
+            $kode_kantor,                       // s (NEW)
             $pdf_filename,                      // s
             $pdf_path_rel,                      // s
             $verified_data['agunan_id'],        // s
             $verified_data['kode_jenis_agunan'], // s
+            $verified_data['cif'],              // s (NEW)
+            $verified_data['nama_nasabah'],     // s (NEW - dari IBS)
+            $verified_data['alamat'],           // s (NEW)
             $verified_data['deskripsi_ringkas'], // s
             $verified_data['tanah_no_shm'],     // s
             $verified_data['tanah_no_shgb'],    // s
@@ -121,9 +126,9 @@ if (!$agunan_data_id) {
         // Mode manual - hanya field dasar
         $stmt = $conn->prepare("
             INSERT INTO agunan_data (
-                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, 
+                id_agunan, nama_nasabah, no_rek, user_id, created_by, nama_kc, kode_kantor,
                 pdf_filename, pdf_path, total_foto, verified_from_ibs, photo_taken_by, photo_taken_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, NOW())
         ");
         
         if (!$stmt) {
@@ -131,8 +136,8 @@ if (!$agunan_data_id) {
             exit;
         }
         
-        $stmt->bind_param('sssisssss', 
-            $id_agunan, $nama_nasabah, $no_rek, $user_id, $created_by, $nama_kc, 
+        $stmt->bind_param('ssisssssss', 
+            $id_agunan, $nama_nasabah, $no_rek, $user_id, $created_by, $nama_kc, $kode_kantor,
             $pdf_filename, $pdf_path_rel, $created_by
         );
     }

@@ -28,6 +28,7 @@ if ($user) {
     $_SESSION['user_id'] = $user['id'];
     $_SESSION['nama_kc'] = $user['nama_kc'];
     $_SESSION['username'] = $user['username'];
+    $_SESSION['kode_kantor'] = $user['kode_kantor']; // TAMBAH: Simpan kode kantor di session
     $_SESSION['login_time'] = time(); // untuk hitung durasi session
     
     $user_id = $user['id'];

@@ -3,8 +3,23 @@ session_start();
 if (!isset($_SESSION['login'])) { header('Location: ../index.php'); exit; }
 require_once __DIR__ . '/../config.php';
 
+$kode_kantor = $_SESSION['kode_kantor'] ?? '000';
+
 $rows = [];
-$res = $conn->query("SELECT * FROM vw_agunan_complete ORDER BY created_at DESC LIMIT 200");
+
+// Admin KPNO (000) bisa lihat semua data
+// Cabang (001-044) hanya lihat data kantornya sendiri
+if ($kode_kantor === '000') {
+    // Pusat - lihat semua (langsung dari agunan_data)
+    $res = $conn->query("SELECT * FROM agunan_data ORDER BY created_at DESC LIMIT 200");
+} else {
+    // Cabang - filter by kode_kantor
+    $stmt = $conn->prepare("SELECT * FROM agunan_data WHERE kode_kantor = ? ORDER BY created_at DESC LIMIT 200");
+    $stmt->bind_param('s', $kode_kantor);
+    $stmt->execute();
+    $res = $stmt->get_result();
+}
+
 if ($res) { while($r = $res->fetch_assoc()) $rows[] = $r; }
 ?>
 <!DOCTYPE html>
@@ -13,6 +28,10 @@ if ($res) { while($r = $res->fetch_assoc()) $rows[] = $r; }
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Riwayat Batch</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#f5f5f5;color:#333}
