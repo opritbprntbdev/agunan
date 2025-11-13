@@ -2,31 +2,39 @@
   "name": "Agunan Capture - KPNO",
   "short_name": "Agunan",
   "description": "Sistem Input Data Agunan Mobile untuk Bank",
-  "start_url": "/agunan-capture/",
+  "start_url": "/agunan-capture/index.php",
   "scope": "/agunan-capture/",
+  "dir": "ltr",
+  "lang": "id",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen"],
   "orientation": "portrait",
   "background_color": "#2563eb",
   "theme_color": "#2563eb",
   "icons": [
     {
-      "src": "/agunan-capture/assets/icon-192.svg",
+      "src": "/agunan-capture/assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/agunan-capture/assets/icon-512.svg",
+      "src": "/agunan-capture/assets/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/agunan-capture/assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/agunan-capture/assets/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
-  "permissions": [
-    "camera",
-    "storage"
-  ],
-  "categories": ["business", "productivity"],
-  "screenshots": []
+  "prefer_related_applications": false
 }

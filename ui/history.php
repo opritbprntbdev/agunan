@@ -10,11 +10,22 @@ $rows = [];
 // Admin KPNO (000) bisa lihat semua data
 // Cabang (001-044) hanya lihat data kantornya sendiri
 if ($kode_kantor === '000') {
-    // Pusat - lihat semua (langsung dari agunan_data)
-    $res = $conn->query("SELECT * FROM agunan_data ORDER BY created_at DESC LIMIT 200");
+    // Pusat - lihat semua dengan jumlah foto
+    $sql = "SELECT ad.*, 
+            (SELECT COUNT(*) FROM agunan_foto af WHERE af.agunan_data_id = ad.id) as jumlah_foto_aktual
+            FROM agunan_data ad 
+            ORDER BY ad.created_at DESC 
+            LIMIT 200";
+    $res = $conn->query($sql);
 } else {
-    // Cabang - filter by kode_kantor
-    $stmt = $conn->prepare("SELECT * FROM agunan_data WHERE kode_kantor = ? ORDER BY created_at DESC LIMIT 200");
+    // Cabang - filter by kode_kantor dengan jumlah foto
+    $sql = "SELECT ad.*, 
+            (SELECT COUNT(*) FROM agunan_foto af WHERE af.agunan_data_id = ad.id) as jumlah_foto_aktual
+            FROM agunan_data ad 
+            WHERE ad.kode_kantor = ? 
+            ORDER BY ad.created_at DESC 
+            LIMIT 200";
+    $stmt = $conn->prepare($sql);
     $stmt->bind_param('s', $kode_kantor);
     $stmt->execute();
     $res = $stmt->get_result();
