@@ -1,4 +1,10 @@
 <?php
+/**
+ * Finalize Voucher Batch - Generate PDF
+ * Generate PDF dari foto-foto voucher yang sudah di-upload
+ * Data IBS hanya dibaca, tidak ada INSERT/UPDATE ke IBS
+ */
+
 header('Content-Type: application/json');
 session_start();
 require_once __DIR__ . '/../config.php';
@@ -15,26 +21,39 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-$agunan_data_id = isset($_POST['agunan_data_id']) ? (int)$_POST['agunan_data_id'] : 0;
-if ($agunan_data_id <= 0) {
-    echo json_encode(['success' => false, 'message' => 'agunan_data_id wajib']);
+$voucher_data_id = isset($_POST['voucher_data_id']) ? (int)$_POST['voucher_data_id'] : 0;
+if ($voucher_data_id <= 0) {
+    echo json_encode(['success' => false, 'message' => 'voucher_data_id wajib']);
     exit;
 }
 
 // Ambil data batch lengkap
-$stmt = $conn->prepare('SELECT * FROM agunan_data WHERE id = ?');
-$stmt->bind_param('i', $agunan_data_id);
+$stmt = $conn->prepare('SELECT * FROM voucher_data WHERE id = ?');
+$stmt->bind_param('i', $voucher_data_id);
 $stmt->execute();
 $res = $stmt->get_result();
 $data = $res->fetch_assoc();
 $stmt->close();
+
 if (!$data) {
     echo json_encode(['success' => false, 'message' => 'Batch tidak ditemukan']);
     exit;
 }
-$id_agunan = $data['id_agunan'];
+
+$trans_id = $data['trans_id'];
+$no_bukti = $data['no_bukti'] ?: $trans_id;
 $nama_nasabah = $data['nama_nasabah'];
-$no_rek = $data['no_rek'];
+$nomor_referensi = $data['nomor_referensi'];
+$kode_kantor = $data['kode_kantor'];
+$created_at = $data['created_at'];
+
+// Parse verified_data jika ada
+$verified_data = null;
+if (!empty($data['verified_data'])) {
+    $verified_data = json_decode($data['verified_data'], true);
+}
+$nama_nasabah = $data['nama_nasabah'];
+$nomor_referensi = $data['nomor_referensi'];
 $kode_kantor = $data['kode_kantor'];
 $created_at = $data['created_at'];
 
@@ -44,9 +63,9 @@ if (!empty($data['verified_data'])) {
     $verified_data = json_decode($data['verified_data'], true);
 }
 
-// Ambil foto-foto
-$stmt = $conn->prepare('SELECT foto_path FROM agunan_foto WHERE agunan_data_id = ? ORDER BY foto_order ASC, id ASC');
-$stmt->bind_param('i', $agunan_data_id);
+// Ambil foto-foto dengan keterangan
+$stmt = $conn->prepare('SELECT foto_path, keterangan FROM voucher_foto WHERE voucher_data_id = ? ORDER BY foto_order ASC, id ASC');
+$stmt->bind_param('i', $voucher_data_id);
 $stmt->execute();
 $photos = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $stmt->close();
@@ -59,7 +78,7 @@ if (!$photos || count($photos) === 0) {
 // Siapkan folder PDF
 $year = date('Y');
 $month = date('m');
-$pdfDirRel = 'pdf/' . $year . '/' . $month;
+$pdfDirRel = 'pdf/voucher/' . $year . '/' . $month;
 $pdfDirAbs = __DIR__ . '/../' . $pdfDirRel;
 if (!is_dir($pdfDirAbs)) {
     if (!mkdir($pdfDirAbs, 0777, true) && !is_dir($pdfDirAbs)) {
@@ -70,41 +89,41 @@ if (!is_dir($pdfDirAbs)) {
 
 // Nama file PDF
 $ts = date('YmdHis');
-$pdfFilename = 'agunan_' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $id_agunan) . '_' . $ts . '.pdf';
+$pdfFilename = 'voucher_' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $trans_id) . '_' . $ts . '.pdf';
 $pdfPathRel = $pdfDirRel . '/' . $pdfFilename;
 $pdfPathAbs = $pdfDirAbs . '/' . $pdfFilename;
 
 // Generate PDF dengan FPDF
 require_once __DIR__ . '/../vendor/fpdf/fpdf.php';
 
-class PDF extends FPDF {
-    private $agunanData;
+class PDFVoucher extends FPDF {
+    private $voucherData;
     private $verifiedData;
     private $totalFoto;
     
-    function __construct($agunanData, $verifiedData, $totalFoto) {
+    function __construct($voucherData, $verifiedData, $totalFoto) {
         parent::__construct('P', 'mm', 'A4');
-        $this->agunanData = $agunanData;
+        $this->voucherData = $voucherData;
         $this->verifiedData = $verifiedData;
         $this->totalFoto = $totalFoto;
     }
     
     function Header() {
-        // Header dengan background gradient (simulasi dengan rect)
-        $this->SetFillColor(102, 126, 234);
+        // Header dengan background gradient pink
+        $this->SetFillColor(245, 87, 108);
         $this->Rect(0, 0, 210, 15, 'F');
         
         // Title putih
         $this->SetTextColor(255, 255, 255);
         $this->SetFont('Arial', 'B', 14);
         $this->SetY(5);
-        $this->Cell(0, 8, 'INFORMASI AGUNAN', 0, 1, 'C');
+        $this->Cell(0, 8, 'INFORMASI VOUCHER', 0, 1, 'C');
         
-        // Box info dengan background abu-abu muda (estimasi tinggi 70mm untuk semua konten)
+        // Box info dengan background abu-abu muda
         $this->SetY(18);
-        $this->SetDrawColor(102, 126, 234);
+        $this->SetDrawColor(245, 87, 108);
         $this->SetLineWidth(0.5);
-        $this->SetFillColor(248, 249, 252);
+        $this->SetFillColor(254, 242, 244);
         $this->RoundRect(10, 18, 190, 70, 2, 'DF');
         
         // Reset line width
@@ -117,13 +136,13 @@ class PDF extends FPDF {
         $labelX = 15;
         $valueX = 65;
         
-        // ID Agunan
+        // Transaction ID
         $this->SetX($labelX);
-        $this->Cell(45, 6, 'ID Agunan', 0, 0);
+        $this->Cell(45, 6, 'Transaction ID', 0, 0);
         $this->SetX($valueX);
         $this->SetFont('Arial', 'B', 10);
-        $this->SetTextColor(102, 126, 234);
-        $this->Cell(0, 6, $this->agunanData['id_agunan'], 0, 1);
+        $this->SetTextColor(245, 87, 108);
+        $this->Cell(0, 6, $this->voucherData['trans_id'], 0, 1);
         
         // Nama Nasabah
         $this->SetFont('Arial', '', 9);
@@ -132,15 +151,23 @@ class PDF extends FPDF {
         $this->Cell(45, 5, 'Nama Nasabah', 0, 0);
         $this->SetX($valueX);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 5, $this->agunanData['nama_nasabah'] ?? '-', 0, 1);
+        $this->Cell(0, 5, $this->voucherData['nama_nasabah'] ?? '-', 0, 1);
         
-        // No. Rekening
+        // No. Bukti
         $this->SetTextColor(100, 100, 100);
         $this->SetX($labelX);
-        $this->Cell(45, 5, 'No. Rekening', 0, 0);
+        $this->Cell(45, 5, 'No. Bukti', 0, 0);
         $this->SetX($valueX);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 5, $this->agunanData['no_rek'] ?? '-', 0, 1);
+        $this->Cell(0, 5, $this->voucherData['no_bukti'] ?? '-', 0, 1);
+        
+        // No. Referensi
+        $this->SetTextColor(100, 100, 100);
+        $this->SetX($labelX);
+        $this->Cell(45, 5, 'No. Referensi', 0, 0);
+        $this->SetX($valueX);
+        $this->SetTextColor(0, 0, 0);
+        $this->Cell(0, 5, $this->voucherData['nomor_referensi'] ?? '-', 0, 1);
         
         // Kode Kantor
         $this->SetTextColor(100, 100, 100);
@@ -148,7 +175,7 @@ class PDF extends FPDF {
         $this->Cell(45, 5, 'Kode Kantor', 0, 0);
         $this->SetX($valueX);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 5, $this->agunanData['kode_kantor'] ?? '-', 0, 1);
+        $this->Cell(0, 5, $this->voucherData['kode_kantor'] ?? '-', 0, 1);
         
         // Tanggal Capture
         $this->SetTextColor(100, 100, 100);
@@ -156,7 +183,7 @@ class PDF extends FPDF {
         $this->Cell(45, 5, 'Tanggal Capture', 0, 0);
         $this->SetX($valueX);
         $this->SetTextColor(0, 0, 0);
-        $tgl = !empty($this->agunanData['created_at']) ? date('d M Y H:i', strtotime($this->agunanData['created_at'])) : '-';
+        $tgl = !empty($this->voucherData['created_at']) ? date('d M Y H:i', strtotime($this->voucherData['created_at'])) : '-';
         $this->Cell(0, 5, $tgl, 0, 1);
         
         // Jumlah Foto
@@ -173,36 +200,33 @@ class PDF extends FPDF {
             $this->Ln(2);
             $this->SetX($labelX);
             $this->SetFont('Arial', 'B', 8);
-            $this->SetTextColor(102, 126, 234);
+            $this->SetTextColor(245, 87, 108);
             $this->Cell(0, 4, 'Data dari IBS:', 0, 1);
             $this->SetFont('Arial', '', 8);
             $this->SetTextColor(80, 80, 80);
             
-            // CIF
-            if (!empty($this->verifiedData['cif'])) {
+            // No Rekening
+            if (!empty($this->verifiedData['no_rekening'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'CIF: ' . $this->verifiedData['cif'], 0, 1);
+                $this->Cell(0, 4, 'No. Rekening: ' . $this->verifiedData['no_rekening'], 0, 1);
             }
             
-            // Jenis Agunan
-            if (!empty($this->verifiedData['jenis_agunan'])) {
+            // Nama Nasabah IBS
+            if (!empty($this->verifiedData['nama_nasabah'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'Jenis: ' . $this->verifiedData['jenis_agunan'], 0, 1);
+                $this->Cell(0, 4, 'Nama: ' . $this->verifiedData['nama_nasabah'], 0, 1);
             }
             
-            // Detail Kendaraan
-            if (!empty($this->verifiedData['kend_no_polisi'])) {
+            // Tanggal Transaksi
+            if (!empty($this->verifiedData['tgl_transaksi'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'No. Polisi: ' . $this->verifiedData['kend_no_polisi'], 0, 1);
+                $this->Cell(0, 4, 'Tgl Transaksi: ' . $this->verifiedData['tgl_transaksi'], 0, 1);
             }
             
-            if (!empty($this->verifiedData['kend_merk'])) {
-                $merk = $this->verifiedData['kend_merk'];
-                if (!empty($this->verifiedData['kend_tahun'])) {
-                    $merk .= ' (' . $this->verifiedData['kend_tahun'] . ')';
-                }
+            // Jenis Transaksi
+            if (!empty($this->verifiedData['jenis_transaksi'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'Merk: ' . $merk, 0, 1);
+                $this->Cell(0, 4, 'Jenis: ' . $this->verifiedData['jenis_transaksi'], 0, 1);
             }
         }
         
@@ -257,48 +281,67 @@ class PDF extends FPDF {
 
 try {
     $totalFoto = count($photos);
-    $pdf = new PDF($data, $verified_data, $totalFoto);
+    $pdf = new PDFVoucher($data, $verified_data, $totalFoto);
     $pdf->SetAutoPageBreak(true, 20);
     $margin = 10;
     
+    $totalFoto = count($photos);
     foreach ($photos as $idx => $ph) {
         $imgRel = $ph['foto_path'];
         $imgAbs = __DIR__ . '/../' . $imgRel;
+        $keterangan = $ph['keterangan'];
+        
         if (!file_exists($imgAbs)) {
             continue; // skip yang tidak ada
         }
+        
         $pdf->AddPage();
         
-        // Tambahkan label foto
+        // Label Foto X dari Y
+        $fotoNum = $idx + 1;
         $pdf->SetFont('Arial', 'B', 10);
-        $pdf->SetTextColor(100, 100, 100);
-        $pdf->Cell(0, 6, 'Foto ' . ($idx + 1) . ' dari ' . count($photos), 0, 1, 'C');
-        $pdf->Ln(3);
+        $pdf->SetTextColor(245, 87, 108);
+        $pdf->Cell(0, 6, 'Foto ' . $fotoNum . ' dari ' . $totalFoto, 0, 1, 'C');
+        $pdf->Ln(2);
         
-        // Hitung scaling agar fit ke halaman
+        // Keterangan di atas gambar (jika ada)
+        if (!empty($keterangan)) {
+            $pdf->SetFont('Arial', 'I', 9);
+            $pdf->SetTextColor(80, 80, 80);
+            $pdf->Cell(0, 5, $keterangan, 0, 1, 'C');
+            $pdf->Ln(2);
+        }
+        
+        // Hitung scaling agar fit ke halaman (reserve 60mm untuk header/footer/labels)
         list($w, $h) = getimagesize($imgAbs);
         $pageW = $pdf->GetPageWidth() - 2*$margin;
-        $pageH = $pdf->GetPageHeight() - 60; // Kurangi space untuk header & footer
+        $pageH = $pdf->GetPageHeight() - 2*$margin - 60;
         $ratio = $w/$h;
         $targetW = $pageW;
         $targetH = $targetW / $ratio;
+        
         if ($targetH > $pageH) {
             $targetH = $pageH;
             $targetW = $targetH * $ratio;
         }
+        
         $x = ($pdf->GetPageWidth() - $targetW) / 2;
         $y = $pdf->GetY();
+        
+        // Gambar
         $pdf->Image($imgAbs, $x, $y, $targetW, $targetH);
     }
+    
     $pdf->Output('F', $pdfPathAbs);
+    
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'FPDF error: ' . $e->getMessage()]);
     exit;
 }
 
-// Update agunan_data
-$stmt = $conn->prepare('UPDATE agunan_data SET pdf_filename = ?, pdf_path = ? WHERE id = ?');
-$stmt->bind_param('ssi', $pdfFilename, $pdfPathRel, $agunan_data_id);
+// Update voucher_data
+$stmt = $conn->prepare('UPDATE voucher_data SET pdf_filename = ?, pdf_path = ? WHERE id = ?');
+$stmt->bind_param('ssi', $pdfFilename, $pdfPathRel, $voucher_data_id);
 $stmt->execute();
 $stmt->close();
 
@@ -312,7 +355,8 @@ echo json_encode([
     'pdf_path' => $pdfPathRel,
     'notification' => [
         'username' => $username,
-        'id_agunan' => $id_agunan,
+        'trans_id' => $trans_id,
+        'no_bukti' => $no_bukti,
         'jumlah_foto' => $jumlahFoto
     ]
 ]);

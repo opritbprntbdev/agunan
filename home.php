@@ -128,9 +128,10 @@ $kode_kantor = $_SESSION['kode_kantor'] ?? '000';
         <?php endif; ?>
       </p>
       <div class="grid">
-        <a class="btn" href="ui/capture_batch.php">Voucher Capture</a>
-        <a class="btn" href="ui/capture_batch.php">Agunan Capture</a>
-        <a class="btn secondary" href="ui/history.php">📄 Riwayat <br>(Preview/Download PDF)</a>
+        <a class="btn" href="ui/voucher_capture.php">💳 Voucher Capture</a>
+        <a class="btn" href="ui/capture_batch.php">🏠 Agunan Capture</a>
+        <a class="btn secondary" href="ui/voucher_history.php">💳 Riwayat Voucher</a>
+        <a class="btn secondary" href="ui/history.php">📄 Riwayat Agunan</a>
 
         <!-- <a class="btn secondary" href="ui/capture.php">📸 Kamera Single (lama)</a> -->
         <!-- <a class="btn secondary" href="form.php">📝 Form Klasik (upload file)</a> -->

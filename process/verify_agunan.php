@@ -31,10 +31,13 @@ if (empty($agunan_id)) {
     exit;
 }
 
-// Query ke database IBS
+// Query ke database IBS - Gunakan query biasa untuk avoid prepared statement limit
 try {
-    // Query lengkap dengan JOIN ke nasabah via kre_agunan_relasi
-    $stmt = $conn_dbibs->prepare('
+    // Sanitize input
+    $agunan_id_escaped = $conn_dbibs->real_escape_string($agunan_id);
+    
+    // Query langsung tanpa prepared statement
+    $query = "
         SELECT 
             c.AGUNAN_ID,
             c.KODE_JENIS_AGUNAN,
@@ -63,17 +66,15 @@ try {
         LEFT JOIN kre_agunan_relasi AS r ON c.AGUNAN_ID = r.agunan_id
         LEFT JOIN kredit AS k ON r.no_rekening = k.no_rekening
         LEFT JOIN nasabah AS n ON k.nasabah_id = n.nasabah_id
-        WHERE c.AGUNAN_ID = ?
+        WHERE c.AGUNAN_ID = '$agunan_id_escaped'
         LIMIT 1
-    ');
+    ";
 
-    if (!$stmt) {
-        throw new Exception('Query preparation failed: ' . $conn_dbibs->error);
+    $result = $conn_dbibs->query($query);
+
+    if (!$result) {
+        throw new Exception('Query execution failed: ' . $conn_dbibs->error);
     }
-
-    $stmt->bind_param('s', $agunan_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
 
     if ($row = $result->fetch_assoc()) {
         // Data ditemukan
@@ -133,7 +134,8 @@ try {
             'verified_at' => date('Y-m-d H:i:s'),
             'verified_by' => $_SESSION['username']
         ];
-        $stmt->close();
+        
+        $result->free();
 
         echo json_encode([
             'success' => true,
@@ -143,7 +145,7 @@ try {
 
     } else {
         // Data tidak ditemukan
-        $stmt->close();
+        $result->free();
         echo json_encode([
             'success' => false,
             'message' => 'Agunan ID "' . htmlspecialchars($agunan_id) . '" tidak ditemukan di sistem IBS',
@@ -152,6 +154,11 @@ try {
     }
 
 } catch (Exception $e) {
+    // Free result if exists
+    if (isset($result) && $result instanceof mysqli_result) {
+        $result->free();
+    }
+    
     // Error koneksi atau query
     echo json_encode([
         'success' => false,
