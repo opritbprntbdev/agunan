@@ -1,0 +1,20 @@
+[24-Nov-2025 02:03:24 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'verified_data' in 'field list' in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php:90
+Stack trace:
+#0 C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php(90): mysqli->prepare('\r\n            I...')
+#1 {main}
+  thrown in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php on line 90
+[24-Nov-2025 02:11:28 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'verified_data' in 'field list' in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php:90
+Stack trace:
+#0 C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php(90): mysqli->prepare('\r\n            I...')
+#1 {main}
+  thrown in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php on line 90
+[24-Nov-2025 02:11:32 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'verified_data' in 'field list' in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php:90
+Stack trace:
+#0 C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php(90): mysqli->prepare('\r\n            I...')
+#1 {main}
+  thrown in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php on line 90
+[24-Nov-2025 02:11:47 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'verified_data' in 'field list' in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php:90
+Stack trace:
+#0 C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php(90): mysqli->prepare('\r\n            I...')
+#1 {main}
+  thrown in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php on line 90

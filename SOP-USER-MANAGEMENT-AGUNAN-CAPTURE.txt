@@ -1,0 +1,403 @@
+================================================================================
+            STANDARD OPERATING PROCEDURE (SOP)
+        USER PROVISIONING & ACCESS MANAGEMENT
+              AGUNAN CAPTURE PWA - BPR NTB
+================================================================================
+
+SOP No    : IT-SOP-002/2025
+Revisi    : 1.0
+Tanggal   : 26 November 2025
+Dibuat    : IT Development Team
+Disetujui : Kepala Divisi IT
+
+
+================================================================================
+                        1. TUJUAN & RUANG LINGKUP
+================================================================================
+
+1.1 TUJUAN
+Mengatur prosedur pengelolaan user, akses, dan permission untuk aplikasi
+Agunan Capture PWA di BPR NTB.
+
+1.2 RUANG LINGKUP
+- Pembuatan user baru
+- Aktivasi/deaktivasi user
+- Reset password
+- Fingerprint management
+- Role & permission management
+- User offboarding
+
+
+================================================================================
+                2. PROSEDUR PEMBUATAN USER BARU
+================================================================================
+
+2.1 REQUEST USER BARU
+--------------------------------------------------------------------------------
+PEMOHON: Kepala KC / Manager Operasional
+TUJUAN: Staff KC memerlukan akses untuk foto agunan
+
+DOKUMEN YANG DIPERLUKAN:
+□ Form Request User (terlampir)
+□ Surat penugasan dari Kepala KC
+□ Copy KTP user yang bersangkutan
+
+APPROVAL FLOW:
+1. Staff KC → Kepala KC (approval request)
+2. Kepala KC → Manager IT (forward approval)
+3. Manager IT → IT Admin (eksekusi pembuatan user)
+
+
+2.2 PEMBUATAN USER DI DATABASE
+--------------------------------------------------------------------------------
+PIC: IT Administrator
+
+STEP 1: LOGIN DATABASE
+$ mysql -u root -p agunan_capture
+
+STEP 2: INSERT USER BARU
+INSERT INTO user (username, password, nama_kc, kode_kantor) 
+VALUES (
+    'user.kc@bprntb.co.id',           -- Username (email format)
+    MD5('Password123'),                 -- Password default
+    'KC MATARAM',                       -- Nama Kantor Cabang
+    '018'                               -- Kode Kantor
+);
+
+STEP 3: VERIFIKASI USER
+SELECT id, username, nama_kc, kode_kantor, created_at 
+FROM user 
+WHERE username = 'user.kc@bprntb.co.id';
+
+STEP 4: TEST LOGIN
+- Buka https://appdev.bprntb.co.id/app/agunan-capture/
+- Login dengan username & password yang baru dibuat
+- Pastikan redirect ke home berhasil
+- Logout
+
+CATATAN PENTING:
+- Password default: Password123 (huruf besar P)
+- User WAJIB ganti password setelah login pertama
+- Username format email untuk kemudahan identifikasi
+
+
+2.3 NOTIFIKASI KE USER
+--------------------------------------------------------------------------------
+PIC: IT Administrator
+
+TEMPLATE EMAIL/WA:
+---
+Yth. Bapak/Ibu [NAMA USER]
+
+Akun Agunan Capture PWA Anda telah dibuat dengan detail:
+
+Username: [USERNAME]
+Password: Password123 (mohon ganti setelah login pertama)
+URL Aplikasi: https://appdev.bprntb.co.id/app/agunan-capture/
+Kantor Cabang: [NAMA KC]
+Kode Kantor: [KODE]
+
+Panduan instalasi dan login terlampir.
+
+Jika ada kendala, hubungi IT Helpdesk: [NOMOR HP/WA]
+
+Hormat kami,
+IT Department BPR NTB
+---
+
+
+2.4 DOKUMENTASI USER BARU
+--------------------------------------------------------------------------------
+Update User Database Spreadsheet:
+
+| Tgl Create | Username | Nama | KC | Kode | Status | Notes |
+|------------|----------|------|-----|------|--------|-------|
+| [DATE] | user@bprntb.co.id | [NAMA] | [KC] | [KODE] | Active | New user |
+
+
+================================================================================
+                3. PROSEDUR RESET PASSWORD
+================================================================================
+
+3.1 REQUEST RESET PASSWORD
+--------------------------------------------------------------------------------
+ALASAN RESET:
+- User lupa password
+- Password compromised/leaked
+- Mandatory password change (policy)
+
+REQUEST VIA:
+- Email ke ithelpdesk@bprntb.co.id
+- WhatsApp IT Helpdesk
+- Telepon kantor pusat
+
+VERIFIKASI IDENTITAS:
+- Konfirmasi nama lengkap
+- Konfirmasi KC & kode kantor
+- Konfirmasi nomor HP terdaftar
+
+
+3.2 RESET PASSWORD DI DATABASE
+--------------------------------------------------------------------------------
+PIC: IT Administrator
+
+STEP 1: VERIFIKASI USER
+$ mysql -u root -p agunan_capture
+SELECT id, username, nama_kc FROM user WHERE username = '[USERNAME]';
+
+STEP 2: RESET PASSWORD
+UPDATE user 
+SET password = MD5('NewPassword123'), 
+    updated_at = NOW() 
+WHERE username = '[USERNAME]';
+
+STEP 3: RESET FINGERPRINT (OPTIONAL)
+DELETE FROM user_webauthn_credentials 
+WHERE user_id = (SELECT id FROM user WHERE username = '[USERNAME]');
+
+STEP 4: NOTIFIKASI USER
+- Send email/WA dengan password baru
+- Minta user ganti password setelah login
+- Minta user re-register fingerprint
+
+
+3.3 SELF-SERVICE PASSWORD RESET (FUTURE)
+--------------------------------------------------------------------------------
+FITUR YANG AKAN DIKEMBANGKAN:
+- Forgot password link di halaman login
+- Verify via email/SMS OTP
+- User set password baru sendiri
+- No intervention dari IT needed
+
+
+================================================================================
+                4. PROSEDUR DEAKTIVASI USER
+================================================================================
+
+4.1 KAPAN USER DIDEAKTIVASI
+- User resign/pindah tugas
+- User cuti panjang (>3 bulan)
+- User tersangkut kasus fraud
+- Request dari Kepala KC
+
+4.2 DEAKTIVASI USER
+--------------------------------------------------------------------------------
+PIC: IT Administrator
+
+STEP 1: SOFT DELETE (RECOMMENDED)
+UPDATE user 
+SET status = 'INACTIVE',
+    updated_at = NOW() 
+WHERE username = '[USERNAME]';
+
+-- Atau tambah kolom is_active
+ALTER TABLE user ADD COLUMN is_active TINYINT(1) DEFAULT 1;
+UPDATE user SET is_active = 0 WHERE username = '[USERNAME]';
+
+STEP 2: HAPUS FINGERPRINT CREDENTIALS
+DELETE FROM user_webauthn_credentials 
+WHERE user_id = (SELECT id FROM user WHERE username = '[USERNAME]');
+
+STEP 3: DOKUMENTASI
+- Update User Database Spreadsheet status = "Inactive"
+- Catat reason: resign/pindah/fraud
+- Catat tanggal deaktivasi
+
+
+4.3 REACTIVATE USER (Jika Diperlukan)
+--------------------------------------------------------------------------------
+UPDATE user 
+SET status = 'ACTIVE',
+    updated_at = NOW() 
+WHERE username = '[USERNAME]';
+
+-- Atau
+UPDATE user SET is_active = 1 WHERE username = '[USERNAME]';
+
+
+================================================================================
+                5. FINGERPRINT MANAGEMENT
+================================================================================
+
+5.1 AKTIVASI FINGERPRINT (BY USER)
+--------------------------------------------------------------------------------
+PROSES OTOMATIS:
+- User login pertama kali dengan username/password
+- Tunggu 2 detik, muncul prompt aktivasi fingerprint
+- User klik OK → scan fingerprint
+- Credential tersimpan di HP user
+- Public key tersimpan di database (tabel user_webauthn_credentials)
+
+CEK STATUS FINGERPRINT:
+$ mysql -u root -p agunan_capture
+SELECT u.username, u.nama_kc, wc.device_name, wc.created_at, wc.last_used_at
+FROM user u
+LEFT JOIN user_webauthn_credentials wc ON u.id = wc.user_id
+WHERE u.username = '[USERNAME]';
+
+
+5.2 RESET FINGERPRINT (BY IT ADMIN)
+--------------------------------------------------------------------------------
+KAPAN PERLU RESET:
+- User ganti HP
+- Fingerprint error terus
+- Security concern (HP hilang/dicuri)
+
+STEP 1: HAPUS CREDENTIAL LAMA
+DELETE FROM user_webauthn_credentials 
+WHERE user_id = (SELECT id FROM user WHERE username = '[USERNAME]');
+
+STEP 2: NOTIFIKASI USER
+- Inform user fingerprint sudah direset
+- Minta user login ulang dengan username/password
+- Prompt aktivasi fingerprint akan muncul lagi
+
+
+5.3 MONITORING FINGERPRINT USAGE
+--------------------------------------------------------------------------------
+QUERY STATISTIK:
+-- Total user dengan fingerprint aktif
+SELECT COUNT(DISTINCT user_id) as total_fingerprint_users
+FROM user_webauthn_credentials;
+
+-- User tanpa fingerprint
+SELECT u.username, u.nama_kc
+FROM user u
+LEFT JOIN user_webauthn_credentials wc ON u.id = wc.user_id
+WHERE wc.id IS NULL;
+
+-- Last used fingerprint
+SELECT u.username, wc.last_used_at, wc.counter
+FROM user_webauthn_credentials wc
+JOIN user u ON wc.user_id = u.id
+ORDER BY wc.last_used_at DESC
+LIMIT 10;
+
+
+================================================================================
+                6. ROLE & PERMISSION (FUTURE DEVELOPMENT)
+================================================================================
+
+6.1 ROLE PLANNING
+- Admin: Full access, manage user
+- Manager KC: Lihat laporan KC sendiri
+- Staff KC: Foto agunan, lihat history sendiri
+- Viewer: Read-only access
+
+6.2 PERMISSION MATRIX
+
+| Role | Create Voucher | Update Voucher | Delete Voucher | View All | Manage User |
+|------|----------------|----------------|----------------|----------|-------------|
+| Admin | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Manager KC | ✅ | ✅ | ❌ | KC Only | ❌ |
+| Staff KC | ✅ | Own Only | ❌ | Own Only | ❌ |
+| Viewer | ❌ | ❌ | ❌ | ✅ | ❌ |
+
+
+6.3 IMPLEMENTASI ROLE (DATABASE)
+ALTER TABLE user ADD COLUMN role VARCHAR(20) DEFAULT 'staff';
+UPDATE user SET role = 'admin' WHERE username = 'admin@bprntb.co.id';
+
+
+================================================================================
+                7. USER OFFBOARDING CHECKLIST
+================================================================================
+
+KETIKA USER RESIGN/KELUAR:
+□ Deaktivasi akun user di database
+□ Hapus fingerprint credentials
+□ Revoke akses ke server (jika ada)
+□ Update dokumentasi user database
+□ Archive data user (jangan delete)
+□ Inform Kepala KC & Manager IT
+□ Serah terima dengan user pengganti (jika ada)
+
+
+================================================================================
+                8. AUDIT & COMPLIANCE
+================================================================================
+
+8.1 AUDIT LOG USER ACTIVITY
+YANG PERLU DI-LOG:
+- Login success/failed (timestamp, IP, device)
+- Foto agunan (user_id, voucher_id, timestamp)
+- Update foto (user_id, voucher_id, old_file, new_file, timestamp)
+- Logout (timestamp)
+
+IMPLEMENTASI (FUTURE):
+CREATE TABLE user_activity_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    action VARCHAR(50),
+    details TEXT,
+    ip_address VARCHAR(45),
+    user_agent VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES user(id)
+);
+
+
+8.2 PERIODIC REVIEW
+- Review active users setiap 3 bulan
+- Deaktivasi user tidak aktif >6 bulan
+- Mandatory password change setiap 6 bulan
+- Review fingerprint usage & anomaly
+
+
+================================================================================
+                9. KONTAK & ESKALASI
+================================================================================
+
+IT Helpdesk (User Request):
+- Email: ithelpdesk@bprntb.co.id
+- WhatsApp: [NOMOR]
+- Telepon: [NOMOR]
+
+IT Administrator (Technical):
+- Email: itadmin@bprntb.co.id
+- WhatsApp: [NOMOR]
+
+IT Manager (Approval):
+- Email: itmanager@bprntb.co.id
+- WhatsApp: [NOMOR]
+
+
+================================================================================
+                10. LAMPIRAN
+================================================================================
+
+Lampiran A: Form Request User Baru
+Lampiran B: Template Notifikasi User
+Lampiran C: User Database Tracking Sheet
+Lampiran D: Password Policy BPR NTB
+
+
+================================================================================
+                    APPROVAL & SIGN-OFF
+================================================================================
+
+Dibuat oleh:
+Nama        : [NAMA IT ADMIN]
+Jabatan     : IT Administrator
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+Direview oleh:
+Nama        : [NAMA IT MANAGER]
+Jabatan     : IT Manager
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+Disetujui oleh:
+Nama        : [NAMA KEPALA IT]
+Jabatan     : Kepala Divisi IT
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+================================================================================
+                        END OF DOCUMENT
+                © 2025 BPR NTB - IT Department
+================================================================================

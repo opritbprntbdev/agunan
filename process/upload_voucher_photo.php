@@ -8,9 +8,15 @@
 // Prevent any output before JSON
 ob_start();
 error_reporting(E_ALL);
-ini_set('display_errors', 0);
+ini_set('display_errors', 0); // Hide errors from output
 ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/../error_upload.log');
+ini_set('error_log', __DIR__ . '/../php_upload_debug.log');
+
+// Catch all errors and warnings
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("Upload Error [$errno]: $errstr in $errfile:$errline");
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
 
 session_start();
 require_once __DIR__ . '/../config.php';
@@ -18,6 +24,9 @@ require_once __DIR__ . '/../config.php';
 // Clear any buffered output and set JSON header
 ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
+
+// Wrap everything in try-catch
+try {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -32,16 +41,18 @@ if (!isset($_SESSION['login'])) {
     exit;
 }
 
-// Validasi field dasar
-$required = ['trans_id'];
-foreach ($required as $r) {
-    if (!isset($_POST[$r]) || $_POST[$r] === '') {
-        echo json_encode(['success' => false, 'message' => "Field $r wajib"]);
-        exit;
-    }
+// Validasi field dasar - ubah ke no_bukti untuk system baru
+$no_bukti = isset($_POST['no_bukti']) ? trim($_POST['no_bukti']) : '';
+$trans_id = isset($_POST['trans_id']) ? trim($_POST['trans_id']) : ''; // fallback untuk compatibility
+
+if (empty($no_bukti) && empty($trans_id)) {
+    echo json_encode(['success' => false, 'message' => 'No bukti atau trans_id wajib diisi']);
+    exit;
 }
 
-$trans_id = trim($_POST['trans_id']);
+// Prioritaskan no_bukti untuk system baru
+$primary_key = !empty($no_bukti) ? $no_bukti : $trans_id;
+
 $keterangan = isset($_POST['keterangan']) ? trim($_POST['keterangan']) : ''; // KETERANGAN PER FOTO
 $voucher_data_id = isset($_POST['voucher_data_id']) && $_POST['voucher_data_id'] !== '' ? (int)$_POST['voucher_data_id'] : null;
 
@@ -77,20 +88,23 @@ if (!is_dir($baseDir)) {
 if (!$voucher_data_id) {
     // Buat nama PDF placeholder
     $ts = date('YmdHis');
-    $pdf_filename = 'voucher_' . $conn->real_escape_string($trans_id) . '_' . $ts . '.pdf';
+    $pdf_filename = 'voucher_' . $conn->real_escape_string($primary_key) . '_' . $ts . '.pdf';
     $pdf_path_rel = 'pdf/voucher/' . $year . '/' . $month . '/' . $pdf_filename;
     
-    // Jika ada data verified dari IBS, simpan semua field
+    // Jika ada data verified dari IBS, simpan semua field + verified_data JSON
     if ($verified_data) {
+        // Simpan detail_rows ke dalam verified_data JSON
+        $verified_data_json = json_encode($verified_data, JSON_UNESCAPED_UNICODE);
+        
         $stmt = $conn->prepare("
             INSERT INTO voucher_data (
                 trans_id, no_bukti, tgl_trans, uraian, kode_jurnal, 
                 kode_kantor_ibs, nama_kantor, alamat_kantor, kota_kantor, nama_pimpinan,
-                total_debet, total_kredit,
+                total_debet, total_kredit, verified_data,
                 verified_from_ibs, verified_at, verified_by,
                 user_id, photo_taken_by, kode_kantor, nama_kc,
                 pdf_filename, pdf_path, total_foto, photo_taken_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?, ?, ?, ?, ?, ?, ?, 0, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?, ?, ?, ?, ?, ?, ?, 0, NOW())
         ");
         
         if (!$stmt) {
@@ -98,37 +112,57 @@ if (!$voucher_data_id) {
             exit;
         }
         
-        // Type string: 19 parameters (verified_at di-hardcode NOW(), photo_taken_at di-hardcode NOW())
+        // Type string: 20 parameters (verified_at di-hardcode NOW(), photo_taken_at di-hardcode NOW())
+        $trans_id_val = $verified_data['trans_id'] ?? '';
+        $no_bukti_val = $verified_data['no_bukti'] ?? $primary_key;
+        $tgl_trans_val = $verified_data['tgl_trans'] ?? date('Y-m-d');
+        $uraian_val = $verified_data['uraian'] ?? '';
+        $kode_jurnal_val = $verified_data['kode_jurnal'] ?? 'GL';
+        $kode_kantor_ibs_val = $verified_data['kode_kantor'] ?? $kode_kantor;
+        $nama_kantor_val = $verified_data['nama_kantor'] ?? '';
+        $alamat_kantor_val = $verified_data['alamat_kantor'] ?? '';
+        $kota_kantor_val = $verified_data['kota_kantor'] ?? '';
+        $nama_pimpinan_val = $verified_data['nama_pimpinan'] ?? '';
+        $total_debet_val = $verified_data['total_debet'] ?? 0;
+        $total_kredit_val = $verified_data['total_kredit'] ?? 0;
+        $verified_by_val = $verified_data['user_verified'] ?? $created_by;
+        
         $stmt->bind_param(
-            'ssssssssssddssissss',  // 19 chars: 10s + 2d + 1s + 1i + 5s = 19
-            $verified_data['trans_id'],       // s - 1
-            $verified_data['no_bukti'],       // s - 2
-            $verified_data['tgl_trans'],      // s - 3
-            $verified_data['uraian'],         // s - 4
-            $verified_data['kode_jurnal'],    // s - 5
-            $verified_data['kode_kantor_ibs'], // s - 6
-            $verified_data['nama_kantor'],    // s - 7
-            $verified_data['alamat_kantor'],  // s - 8
-            $verified_data['kota_kantor'],    // s - 9
-            $verified_data['nama_pimpinan'],  // s - 10
-            $verified_data['total_debet'],    // d - 11
-            $verified_data['total_kredit'],   // d - 12
-            $verified_data['verified_by'],    // s - 13
-            $user_id,                         // i - 14
-            $created_by,                      // s - 15 (photo_taken_by)
-            $kode_kantor,                     // s - 16
-            $nama_kc,                         // s - 17
-            $pdf_filename,                    // s - 18
-            $pdf_path_rel                     // s - 19
+            'ssssssssssddssisssss',  // 20 params: s(11) + d(2) + s(1) + i(1) + s(5)
+            $trans_id_val,                // s - 1
+            $no_bukti_val,                // s - 2
+            $tgl_trans_val,               // s - 3
+            $uraian_val,                  // s - 4
+            $kode_jurnal_val,             // s - 5
+            $kode_kantor_ibs_val,         // s - 6
+            $nama_kantor_val,             // s - 7
+            $alamat_kantor_val,           // s - 8
+            $kota_kantor_val,             // s - 9
+            $nama_pimpinan_val,           // s - 10
+            $total_debet_val,             // d - 11
+            $total_kredit_val,            // d - 12
+            $verified_data_json,          // s - 13
+            $verified_by_val,             // s - 14
+            $user_id,                     // i - 15
+            $created_by,                  // s - 16
+            $kode_kantor,                 // s - 17
+            $nama_kc,                     // s - 18
+            $pdf_filename,                // s - 19
+            $pdf_path_rel                 // s - 20
         );
+        
+        if (!$stmt->execute()) {
+            echo json_encode(['success' => false, 'message' => 'Gagal insert voucher_data: ' . $stmt->error]);
+            exit;
+        }
         
     } else {
         // Mode manual (jarang terjadi untuk voucher, tapi tetap support)
         $stmt = $conn->prepare("
             INSERT INTO voucher_data (
-                trans_id, user_id, photo_taken_by, kode_kantor, nama_kc,
+                trans_id, no_bukti, user_id, photo_taken_by, kode_kantor, nama_kc,
                 pdf_filename, pdf_path, total_foto, verified_from_ibs, photo_taken_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 0, NOW())
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, NOW())
         ");
         
         if (!$stmt) {
@@ -136,16 +170,17 @@ if (!$voucher_data_id) {
             exit;
         }
         
-        $stmt->bind_param('sissss', 
-            $trans_id, $user_id, $created_by, $kode_kantor, $nama_kc,
+        $stmt->bind_param('ssisssss', 
+            $trans_id, $no_bukti, $user_id, $created_by, $kode_kantor, $nama_kc,
             $pdf_filename, $pdf_path_rel
         );
+        
+        if (!$stmt->execute()) {
+            echo json_encode(['success' => false, 'message' => 'Gagal membuat voucher_data: ' . $stmt->error]);
+            exit;
+        }
     }
     
-    if (!$stmt->execute()) {
-        echo json_encode(['success' => false, 'message' => 'Gagal membuat voucher_data: ' . $stmt->error]);
-        exit;
-    }
     $voucher_data_id = (int)$stmt->insert_id;
     $stmt->close();
 }
@@ -200,5 +235,18 @@ echo json_encode([
     'next_order' => $next_order + 1,
     'foto_path' => $destRel
 ]);
+
+} catch (Throwable $e) {
+    error_log('Upload voucher error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Upload error: ' . $e->getMessage(),
+        'debug' => [
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ]
+    ]);
+}
 exit;
 ?>

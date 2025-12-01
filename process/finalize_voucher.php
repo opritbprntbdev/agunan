@@ -5,9 +5,28 @@
  * Data IBS hanya dibaca, tidak ada INSERT/UPDATE ke IBS
  */
 
-header('Content-Type: application/json');
+// Prevent any output before JSON
+ob_start();
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../php_finalize_debug.log');
+
+// Catch all errors
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("Finalize Error [$errno]: $errstr in $errfile:$errline");
+    throw new ErrorException($errstr, 0, $errno, $errfile, $errline);
+});
+
 session_start();
 require_once __DIR__ . '/../config.php';
+
+// Clear buffer and set JSON header
+ob_end_clean();
+header('Content-Type: application/json; charset=utf-8');
+
+// Wrap everything in try-catch
+try {
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -40,25 +59,16 @@ if (!$data) {
     exit;
 }
 
-$trans_id = $data['trans_id'];
+$trans_id = $data['trans_id'] ?? '';
 $no_bukti = $data['no_bukti'] ?: $trans_id;
-$nama_nasabah = $data['nama_nasabah'];
-$nomor_referensi = $data['nomor_referensi'];
-$kode_kantor = $data['kode_kantor'];
-$created_at = $data['created_at'];
+$kode_kantor = $data['kode_kantor'] ?? '';
+$created_at = $data['created_at'] ?? '';
 
 // Parse verified_data jika ada
 $verified_data = null;
 if (!empty($data['verified_data'])) {
     $verified_data = json_decode($data['verified_data'], true);
 }
-$nama_nasabah = $data['nama_nasabah'];
-$nomor_referensi = $data['nomor_referensi'];
-$kode_kantor = $data['kode_kantor'];
-$created_at = $data['created_at'];
-
-// Parse verified_data jika ada
-$verified_data = null;
 if (!empty($data['verified_data'])) {
     $verified_data = json_decode($data['verified_data'], true);
 }
@@ -161,13 +171,13 @@ class PDFVoucher extends FPDF {
         $this->SetTextColor(0, 0, 0);
         $this->Cell(0, 5, $this->voucherData['no_bukti'] ?? '-', 0, 1);
         
-        // No. Referensi
+        // Kode Jurnal
         $this->SetTextColor(100, 100, 100);
         $this->SetX($labelX);
-        $this->Cell(45, 5, 'No. Referensi', 0, 0);
+        $this->Cell(45, 5, 'Kode Jurnal', 0, 0);
         $this->SetX($valueX);
         $this->SetTextColor(0, 0, 0);
-        $this->Cell(0, 5, $this->voucherData['nomor_referensi'] ?? '-', 0, 1);
+        $this->Cell(0, 5, $this->voucherData['kode_jurnal'] ?? '-', 0, 1);
         
         // Kode Kantor
         $this->SetTextColor(100, 100, 100);
@@ -205,28 +215,28 @@ class PDFVoucher extends FPDF {
             $this->SetFont('Arial', '', 8);
             $this->SetTextColor(80, 80, 80);
             
-            // No Rekening
-            if (!empty($this->verifiedData['no_rekening'])) {
-                $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'No. Rekening: ' . $this->verifiedData['no_rekening'], 0, 1);
-            }
-            
-            // Nama Nasabah IBS
-            if (!empty($this->verifiedData['nama_nasabah'])) {
-                $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'Nama: ' . $this->verifiedData['nama_nasabah'], 0, 1);
-            }
-            
             // Tanggal Transaksi
-            if (!empty($this->verifiedData['tgl_transaksi'])) {
+            if (!empty($this->verifiedData['tgl_trans'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'Tgl Transaksi: ' . $this->verifiedData['tgl_transaksi'], 0, 1);
+                $this->Cell(0, 4, 'Tgl Trans: ' . $this->verifiedData['tgl_trans'], 0, 1);
             }
             
-            // Jenis Transaksi
-            if (!empty($this->verifiedData['jenis_transaksi'])) {
+            // Uraian
+            if (!empty($this->verifiedData['uraian'])) {
                 $this->SetX($labelX + 2);
-                $this->Cell(0, 4, 'Jenis: ' . $this->verifiedData['jenis_transaksi'], 0, 1);
+                $this->Cell(0, 4, 'Uraian: ' . $this->verifiedData['uraian'], 0, 1);
+            }
+            
+            // Total Debet
+            if (!empty($this->verifiedData['total_debet'])) {
+                $this->SetX($labelX + 2);
+                $this->Cell(0, 4, 'Total Debet: Rp ' . number_format($this->verifiedData['total_debet'], 0, ',', '.'), 0, 1);
+            }
+            
+            // Total Kredit
+            if (!empty($this->verifiedData['total_kredit'])) {
+                $this->SetX($labelX + 2);
+                $this->Cell(0, 4, 'Total Kredit: Rp ' . number_format($this->verifiedData['total_kredit'], 0, ',', '.'), 0, 1);
             }
         }
         
@@ -360,5 +370,18 @@ echo json_encode([
         'jumlah_foto' => $jumlahFoto
     ]
 ]);
+
+} catch (Throwable $e) {
+    error_log('Finalize voucher error: ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
+    http_response_code(500);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Finalize error: ' . $e->getMessage(),
+        'debug' => [
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ]
+    ]);
+}
 exit;
 ?>

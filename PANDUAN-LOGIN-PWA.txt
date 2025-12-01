@@ -1,0 +1,195 @@
+================================================================================
+           PANDUAN LOGIN APLIKASI AGUNAN CAPTURE PWA
+              Sistem Input Data Agunan Mobile - BPR NTB
+================================================================================
+
+METODE 1: LOGIN DENGAN USERNAME & PASSWORD (Pertama Kali)
+================================================================================
+
+LANGKAH 1: BUKA APLIKASI
+--------------------------------------------------------------------------------
+1. Tap icon "Agunan" di home screen HP Anda
+2. Tunggu aplikasi terbuka
+3. Anda akan melihat halaman login dengan logo BPR NTB
+
+
+LANGKAH 2: MASUKKAN KREDENSIAL
+--------------------------------------------------------------------------------
+1. Pada kolom "Username":
+   Ketik username Anda (biasanya email atau kode karyawan)
+   Contoh: selong@bprntb.co.id
+
+2. Pada kolom "Password":
+   Ketik password yang telah diberikan oleh admin
+   - Klik icon mata (👁️) untuk melihat password yang diketik
+   - Pastikan huruf besar/kecil sesuai (case sensitive)
+
+
+LANGKAH 3: LOGIN
+--------------------------------------------------------------------------------
+1. Setelah username dan password terisi, klik tombol:
+   
+   ➡️ Masuk ke Sistem
+   
+2. Tunggu proses verifikasi (2-3 detik)
+3. Jika berhasil, Anda akan masuk ke halaman Home
+
+
+LANGKAH 4: AKTIVASI FINGERPRINT (OPSIONAL)
+--------------------------------------------------------------------------------
+⏰ Setelah login pertama kali, tunggu 2 detik
+
+Akan muncul popup:
+   "🔐 Aktifkan login dengan fingerprint?
+   
+   Dengan mengaktifkan fitur ini, Anda dapat login
+   lebih cepat menggunakan sidik jari tanpa
+   memasukkan username dan password.
+   
+   Apakah Anda ingin mengaktifkan sekarang?"
+
+- Klik "OK" untuk mengaktifkan fingerprint
+- Scan sidik jari Anda saat diminta
+- Klik "Batal" jika tidak ingin mengaktifkan (bisa diaktifkan nanti)
+
+
+⚠️ CATATAN LOGIN PERTAMA KALI:
+- Login pertama HARUS dari aplikasi PWA (bukan browser)
+- Setelah login, Anda akan tetap login walaupun tutup aplikasi
+- Untuk logout, klik tombol "Logout" di halaman Home
+
+
+
+================================================================================
+METODE 2: LOGIN DENGAN FINGERPRINT (Setelah Aktivasi)
+================================================================================
+
+LANGKAH 1: BUKA APLIKASI
+--------------------------------------------------------------------------------
+1. Tap icon "Agunan" di home screen
+2. Anda akan melihat halaman login
+3. Perhatikan tombol baru di bawah kolom password:
+   
+   🔐 Login dengan Fingerprint
+
+
+LANGKAH 2: LOGIN FINGERPRINT
+--------------------------------------------------------------------------------
+1. Klik tombol "🔐 Login dengan Fingerprint"
+2. Akan muncul prompt "Scan sidik jari untuk melanjutkan"
+3. Letakkan jari Anda di sensor fingerprint HP
+4. Tunggu verifikasi (1-2 detik)
+5. Jika berhasil, langsung masuk ke Home
+
+
+⚠️ KEUNTUNGAN LOGIN FINGERPRINT:
+✅ Lebih cepat (tidak perlu ketik username/password)
+✅ Lebih aman (biometrik tidak bisa ditiru)
+✅ Tidak perlu ingat password
+✅ Satu tap langsung masuk
+
+
+⚠️ CATATAN LOGIN FINGERPRINT:
+- Hanya tersedia di aplikasi PWA (tidak di browser)
+- Hanya bisa digunakan di HP yang sudah diaktivasi
+- Jika gagal scan 3x, gunakan login username/password
+- Fingerprint tersimpan di HP, tidak di server
+
+
+
+================================================================================
+                      TROUBLESHOOTING LOGIN
+================================================================================
+
+MASALAH: "Login via browser dinonaktifkan"
+PENYEBAB: Anda membuka dari browser Chrome, bukan aplikasi PWA
+SOLUSI:
+- Tutup browser
+- Buka aplikasi "Agunan" dari home screen
+- Login dari aplikasi tersebut
+
+
+MASALAH: "Username atau password salah"
+SOLUSI:
+- Pastikan username benar (huruf besar/kecil sesuai)
+- Pastikan password benar (huruf besar/kecil sesuai)
+- Cek apakah ada spasi di awal/akhir username/password
+- Hubungi admin untuk reset password jika lupa
+
+
+MASALAH: Tombol fingerprint tidak muncul
+PENYEBAB: Belum aktivasi fingerprint atau buka dari browser
+SOLUSI:
+- Pastikan sudah login sekali dan aktivasi fingerprint
+- Pastikan buka dari aplikasi PWA, bukan browser
+- Logout dan login ulang untuk coba aktivasi lagi
+
+
+MASALAH: Fingerprint gagal scan terus
+SOLUSI:
+- Pastikan jari bersih dan kering
+- Pastikan sensor fingerprint HP bersih
+- Coba gunakan jari lain yang sudah terdaftar di HP
+- Jika masih gagal, gunakan login username/password
+
+
+MASALAH: Setelah login, langsung logout lagi
+PENYEBAB: Session terputus atau buka dari browser
+SOLUSI:
+- Pastikan buka dari aplikasi PWA di home screen
+- Jangan buka dari browser biasa
+- Clear cache aplikasi di Settings > Apps > Agunan
+- Uninstall dan install ulang aplikasi
+
+
+MASALAH: Aplikasi loading terus saat login
+SOLUSI:
+- Cek koneksi internet
+- Pastikan server tidak down
+- Restart aplikasi
+- Restart HP jika perlu
+
+
+
+================================================================================
+                    KEAMANAN & PRIVASI LOGIN
+================================================================================
+
+🔒 KEAMANAN:
+- Password disimpan dengan enkripsi di server
+- Fingerprint disimpan di HP Anda (tidak di server)
+- Session otomatis logout setelah 7 hari tidak aktif
+- Login hanya bisa dari aplikasi PWA (browser diblokir)
+
+
+🔐 TIPS KEAMANAN:
+✅ Jangan share username/password ke orang lain
+✅ Jangan login di HP orang lain
+✅ Selalu logout jika HP digunakan bersama
+✅ Ganti password secara berkala
+✅ Aktifkan fingerprint untuk keamanan ekstra
+
+
+⚠️ JIKA HP HILANG/DICURI:
+1. Segera hubungi IT Support untuk blokir akun
+2. Password akan direset oleh admin
+3. Fingerprint di HP hilang tidak bisa digunakan di HP lain
+4. Login ulang di HP baru dengan password baru
+
+
+
+================================================================================
+                        KONTAK BANTUAN
+================================================================================
+
+Jika mengalami kesulitan login, hubungi:
+- IT Support: [Nomor HP/WA IT Support]
+- Email: [Email IT Support]
+- Kantor Pusat: [Nomor Telepon Kantor]
+- Jam Kerja: Senin-Jumat, 08.00-16.00 WITA
+
+
+================================================================================
+                        Versi: 2.0 Mobile Edition
+                    © 2025 BPR NTB - IT Department
+================================================================================

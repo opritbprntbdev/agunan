@@ -19,6 +19,15 @@ if (isset($_SESSION['login_history_id']) && isset($_SESSION['login_time'])) {
 }
 
 session_destroy();
-header("Location: index.php");
+
+// Cek alasan logout
+$reason = isset($_GET['reason']) ? $_GET['reason'] : '';
+$message = '';
+
+if ($reason === 'browser_access') {
+    $message = 'Akses via browser diblokir. Silakan gunakan aplikasi yang sudah terinstall atau install aplikasi terlebih dahulu.';
+}
+
+header("Location: index.php" . ($message ? "?error=" . urlencode($message) : ""));
 exit;
 ?>

@@ -1,0 +1,435 @@
+================================================================================
+        PANDUAN PEMAKAIAN APLIKASI AGUNAN CAPTURE PWA
+              Sistem Input Data Agunan Mobile - BPR NTB
+================================================================================
+
+MODUL 1: MENU UTAMA (HOME)
+================================================================================
+
+Setelah login, Anda akan melihat halaman Home dengan informasi:
+
+📊 INFORMASI USER:
+- Username: Email login Anda
+- KC: Nama Kantor Cabang
+- Kode Kantor: Kode unik cabang Anda
+
+🎛️ MENU YANG TERSEDIA:
+1. 📂 Voucher GL (Baru) - Input data agunan baru
+2. 🏠 Agunan Capture - Foto agunan dengan auto-crop
+3. 📋 Riwayat Voucher - Lihat history voucher
+4. 📄 Riwayat Agunan - Lihat history agunan
+
+⚡ FITUR TAMBAHAN:
+- 🌙 Dark Mode - Toggle tema gelap/terang
+- 🔴 Logout - Keluar dari aplikasi
+
+
+CARA NAVIGASI:
+- Tap menu yang ingin digunakan
+- Tombol "⬅️ Kembali" untuk kembali ke halaman sebelumnya
+- Tombol "🏠 Home" untuk kembali ke menu utama
+
+
+
+================================================================================
+MODUL 2: VOUCHER GL (INPUT DATA AGUNAN BARU)
+================================================================================
+
+LANGKAH 1: BUKA MENU VOUCHER GL
+--------------------------------------------------------------------------------
+1. Dari halaman Home, tap menu "📂 Voucher GL (Baru)"
+2. Anda akan melihat halaman "Daftar Voucher GL"
+
+
+LANGKAH 2: CEK DAFTAR VOUCHER
+--------------------------------------------------------------------------------
+Di halaman ini Anda akan melihat:
+- Tanggal data ditampilkan
+- Tombol filter tanggal
+- List voucher yang belum/sudah difoto
+
+INFORMASI SETIAP VOUCHER:
+- No Bukti: Nomor unik voucher
+- Nomor Rekening: Rekening nasabah
+- Nama Nasabah: Nama pemilik agunan
+- CIF: Customer Information File
+- Status:
+  • 📸 Foto - Belum ada foto (warna merah)
+  • 👁️ Preview + 🔄 Update - Sudah ada foto (warna hijau)
+
+
+LANGKAH 3: FOTO AGUNAN BARU
+--------------------------------------------------------------------------------
+1. Cari voucher yang bertanda "📸 Foto" (belum difoto)
+2. Tap tombol "📸 Foto"
+3. Anda akan masuk ke halaman Capture
+
+📷 HALAMAN CAPTURE:
+- Kamera akan langsung aktif
+- Arahkan kamera ke dokumen agunan
+- Pastikan pencahayaan cukup terang
+- Pastikan dokumen tidak terpotong
+
+4. Tap tombol "📸 Ambil Foto" untuk capture
+5. Setelah foto terambil, akan muncul preview foto
+6. Jika foto bagus, tap "✅ Simpan"
+7. Jika foto kurang bagus, tap "🔄 Ulangi"
+
+
+LANGKAH 4: VERIFIKASI DATA
+--------------------------------------------------------------------------------
+Setelah foto disimpan:
+1. Sistem akan proses foto (compress & upload)
+2. Muncul notifikasi "✅ Foto berhasil disimpan"
+3. Status voucher berubah dari "📸 Foto" menjadi "👁️ Preview"
+4. Anda bisa lanjut foto voucher lain atau kembali ke Home
+
+
+TIPS FOTO YANG BAIK:
+✅ Gunakan pencahayaan yang cukup (tidak terlalu gelap/terang)
+✅ Pegang HP dengan stabil (tidak goyang)
+✅ Pastikan seluruh dokumen masuk frame
+✅ Foto dari atas dokumen (tidak miring)
+✅ Hindari bayangan tangan/benda lain di foto
+✅ Pastikan tulisan di dokumen bisa terbaca jelas
+
+
+
+================================================================================
+MODUL 3: PREVIEW & UPDATE FOTO
+================================================================================
+
+LANGKAH 1: LIHAT FOTO YANG SUDAH DISIMPAN
+--------------------------------------------------------------------------------
+1. Di halaman "Daftar Voucher GL", cari voucher dengan status "👁️ Preview"
+2. Tap tombol "👁️ Preview"
+3. Foto akan terbuka di tab baru (PDF format)
+4. Zoom in/out dengan pinch gesture
+5. Close tab untuk kembali ke daftar
+
+
+LANGKAH 2: UPDATE FOTO (Jika Salah/Kurang Jelas)
+--------------------------------------------------------------------------------
+1. Tap tombol "🔄 Update" di samping "👁️ Preview"
+2. Anda akan masuk ke halaman Capture lagi
+3. Foto ulang dokumen agunan
+4. Tap "✅ Simpan" untuk replace foto lama
+5. Foto lama akan otomatis terhapus dan diganti foto baru
+
+
+⚠️ CATATAN UPDATE FOTO:
+- Foto lama tidak bisa di-recover setelah diupdate
+- Pastikan foto baru lebih baik dari foto lama
+- Tidak ada limit berapa kali bisa update
+
+
+
+================================================================================
+MODUL 4: AGUNAN CAPTURE (FOTO DENGAN AUTO-CROP)
+================================================================================
+
+FITUR SPESIAL: Auto-Crop & Perspective Correction
+--------------------------------------------------------------------------------
+Menu ini menggunakan teknologi OpenCV untuk:
+✅ Auto detect tepi dokumen
+✅ Auto crop dokumen dari background
+✅ Auto koreksi perspektif (dokumen miring → lurus)
+✅ Auto enhance contrast & brightness
+
+
+CARA PAKAI AGUNAN CAPTURE:
+--------------------------------------------------------------------------------
+1. Dari Home, tap menu "🏠 Agunan Capture"
+2. Kamera akan aktif dengan overlay guide
+3. Arahkan kamera ke dokumen
+4. Sistem akan auto detect tepi dokumen (garis hijau)
+5. Tap "📸 Capture" saat tepi sudah terdeteksi
+6. Foto akan otomatis di-crop dan diluruskan
+7. Preview hasil, jika bagus tap "✅ Simpan"
+
+
+TIPS AUTO-CROP:
+✅ Gunakan background kontras (dokumen putih → alas gelap)
+✅ Pastikan pencahayaan merata
+✅ Letakkan dokumen flat (tidak bengkok)
+✅ Tunggu garis hijau muncul sebelum capture
+✅ Jika auto detect gagal, gunakan manual adjust
+
+
+
+================================================================================
+MODUL 5: RIWAYAT VOUCHER
+================================================================================
+
+MELIHAT HISTORY VOUCHER:
+--------------------------------------------------------------------------------
+1. Dari Home, tap menu "📋 Riwayat Voucher"
+2. Anda akan melihat list semua voucher yang pernah difoto
+3. Filter berdasarkan:
+   - Tanggal (pilih range tanggal)
+   - Status (Sudah Foto / Belum Foto)
+   - Nama Nasabah (search box)
+
+
+INFORMASI RIWAYAT:
+- Tanggal Foto: Kapan foto diambil
+- User: Siapa yang foto
+- No Bukti: Nomor voucher
+- Nama Nasabah: Nama pemilik agunan
+- Status: Sudah difoto atau belum
+
+
+AKSI DI RIWAYAT:
+- 👁️ Preview: Lihat foto yang tersimpan
+- 📥 Download: Download foto ke HP (format PDF)
+- 🔄 Update: Foto ulang (hanya jika perlu)
+
+
+
+================================================================================
+MODUL 6: RIWAYAT AGUNAN
+================================================================================
+
+MELIHAT HISTORY AGUNAN CAPTURE:
+--------------------------------------------------------------------------------
+1. Dari Home, tap menu "📄 Riwayat Agunan"
+2. List semua agunan yang difoto dengan auto-crop
+3. Informasi lengkap setiap agunan:
+   - Tanggal & waktu foto
+   - Nama file hasil crop
+   - Preview thumbnail
+   - Status processing
+
+
+AKSI DI RIWAYAT AGUNAN:
+- 👁️ View: Lihat hasil crop full size
+- 📥 Download: Download file hasil crop
+- 🗑️ Delete: Hapus foto (jika salah)
+
+
+
+================================================================================
+MODUL 7: DARK MODE & SETTINGS
+================================================================================
+
+MENGAKTIFKAN DARK MODE:
+--------------------------------------------------------------------------------
+1. Di halaman Home, cari toggle "🌙 Dark Mode"
+2. Tap toggle untuk aktifkan/nonaktifkan
+3. Tema akan berubah:
+   - Light Mode: Background putih, text hitam
+   - Dark Mode: Background hitam, text putih
+
+
+KEUNTUNGAN DARK MODE:
+✅ Hemat baterai (pada layar OLED/AMOLED)
+✅ Nyaman di mata saat malam hari
+✅ Mengurangi eye strain
+✅ Terlihat lebih modern
+
+
+
+================================================================================
+MODUL 8: LOGOUT & KEAMANAN
+================================================================================
+
+CARA LOGOUT:
+--------------------------------------------------------------------------------
+1. Di halaman Home, tap tombol "🔴 Logout" (pojok kanan atas)
+2. Confirm logout dengan tap "OK"
+3. Anda akan kembali ke halaman login
+4. Session akan dihapus dari HP
+
+
+⚠️ KAPAN HARUS LOGOUT:
+✅ Selesai kerja dan HP akan ditinggal
+✅ HP akan dipinjamkan ke orang lain
+✅ Ganti HP atau install ulang aplikasi
+✅ Ada kendala teknis (logout & login ulang)
+
+
+⚠️ AUTO LOGOUT:
+Sistem akan otomatis logout jika:
+- Session expired (7 hari tidak aktif)
+- Detect login dari HP lain
+- Admin reset password Anda
+- Aplikasi di-uninstall dari HP
+
+
+
+================================================================================
+                    TROUBLESHOOTING PEMAKAIAN
+================================================================================
+
+MASALAH: Kamera tidak muncul/hitam saat foto
+SOLUSI:
+- Pastikan aplikasi sudah diberi izin akses kamera
+- Buka Settings > Apps > Agunan > Permissions > Camera > Allow
+- Restart aplikasi
+- Coba foto dengan menu lain (Voucher GL atau Agunan Capture)
+
+
+MASALAH: Foto blur/tidak jelas
+SOLUSI:
+- Pegang HP dengan stabil (tidak goyang)
+- Pastikan pencahayaan cukup
+- Bersihkan lensa kamera HP
+- Tap layar untuk fokus sebelum capture
+- Gunakan menu Agunan Capture untuk auto-enhance
+
+
+MASALAH: Upload foto gagal/loading lama
+SOLUSI:
+- Cek koneksi internet
+- Pastikan signal stabil (minimal 3G)
+- Coba foto dengan ukuran lebih kecil (zoom out)
+- Restart aplikasi dan coba lagi
+
+
+MASALAH: Voucher tidak muncul di list
+SOLUSI:
+- Cek filter tanggal (mungkin tanggal salah)
+- Pull-down untuk refresh halaman
+- Pastikan data sudah tersinkron dari server
+- Hubungi admin jika data benar-benar hilang
+
+
+MASALAH: Tombol Preview error 404
+SOLUSI:
+- File PDF mungkin terhapus di server
+- Coba Update foto untuk upload ulang
+- Hubungi IT support untuk restore file
+
+
+MASALAH: Auto-crop gagal detect dokumen
+SOLUSI:
+- Gunakan background kontras (dokumen putih → alas hitam)
+- Pastikan pencahayaan merata (tidak ada bayangan)
+- Letakkan dokumen flat di permukaan datar
+- Coba manual adjust dengan drag corner points
+- Jika tetap gagal, gunakan menu Voucher GL biasa
+
+
+
+================================================================================
+                    TIPS & BEST PRACTICES
+================================================================================
+
+📸 FOTO AGUNAN:
+✅ Foto di siang hari dengan cahaya alami (lebih bagus dari flash)
+✅ Gunakan mode portrait (vertical) untuk dokumen panjang
+✅ Gunakan mode landscape (horizontal) untuk dokumen lebar
+✅ Foto satu dokumen per voucher (jangan gabung beberapa dokumen)
+✅ Cek preview sebelum simpan (pastikan tulisan jelas terbaca)
+
+
+⚡ EFISIENSI KERJA:
+✅ Kumpulkan semua dokumen sebelum mulai foto
+✅ Foto batch voucher dengan tanggal sama (filter tanggal)
+✅ Gunakan fingerprint login untuk hemat waktu
+✅ Aktifkan Dark Mode untuk hemat baterai
+✅ Clear cache berkala untuk performa optimal
+
+
+🔒 KEAMANAN DATA:
+✅ Jangan foto dokumen pribadi/rahasia di HP kantor
+✅ Jangan share foto agunan ke media sosial
+✅ Hapus foto dari galeri HP setelah upload (auto-delete)
+✅ Logout saat selesai kerja
+✅ Jangan install aplikasi lain dari sumber tidak resmi
+
+
+🌐 KONEKSI INTERNET:
+✅ Gunakan WiFi kantor untuk upload lebih cepat
+✅ Hindari foto saat koneksi lemah (upload gagal)
+✅ Enable auto-sync di Settings HP untuk backup otomatis
+✅ Monitor kuota internet jika pakai data seluler
+
+
+
+================================================================================
+                        FAQ (FREQUENTLY ASKED QUESTIONS)
+================================================================================
+
+Q: Apakah foto tersimpan di HP atau server?
+A: Foto langsung diupload ke server dan tidak tersimpan di galeri HP.
+   Sistem otomatis hapus file lokal setelah upload sukses.
+
+Q: Berapa ukuran maksimal foto yang bisa diupload?
+A: Maksimal 5 MB per foto. Sistem otomatis compress foto jika terlalu besar.
+
+Q: Apakah bisa foto offline (tanpa internet)?
+A: Tidak bisa. Sistem memerlukan koneksi internet untuk upload foto ke server.
+
+Q: Berapa lama foto tersimpan di server?
+A: Permanent. Foto tidak akan dihapus kecuali admin melakukan purge data.
+
+Q: Apakah bisa akses dari HP lain?
+A: Bisa. Login dengan username/password yang sama di HP lain.
+   Fingerprint tidak akan tersinkron (harus setup ulang di HP baru).
+
+Q: Apakah bisa digunakan di tablet?
+A: Bisa. Aplikasi responsive dan bisa digunakan di tablet Android/iOS.
+
+Q: Format foto apa yang disupport?
+A: JPG/JPEG. Sistem otomatis convert format lain ke JPG saat upload.
+
+Q: Apakah bisa foto di ruangan gelap?
+A: Bisa, tapi hasilnya kurang bagus. Disarankan foto dengan pencahayaan cukup.
+
+Q: Apakah bisa zoom foto sebelum capture?
+A: Bisa. Pinch zoom di layar kamera sebelum tap tombol capture.
+
+Q: Bagaimana cara hapus foto yang salah?
+A: Gunakan tombol Update untuk replace foto lama dengan foto baru.
+   Foto lama otomatis terhapus saat foto baru diupload.
+
+
+
+================================================================================
+                        KONTAK BANTUAN
+================================================================================
+
+🆘 TECHNICAL SUPPORT:
+- IT Helpdesk: [Nomor HP/WA]
+- Email: [Email Support]
+- Kantor Pusat: [Nomor Telepon]
+
+🕐 JAM OPERASIONAL:
+- Senin - Jumat: 08.00 - 16.00 WITA
+- Sabtu: 08.00 - 12.00 WITA  
+- Minggu & Libur: TUTUP
+
+📧 EMAIL SUPPORT:
+- Untuk laporan bug: bug@bprntb.co.id
+- Untuk request fitur: feature@bprntb.co.id
+- Untuk pertanyaan umum: support@bprntb.co.id
+
+
+================================================================================
+                        UPDATE LOG APLIKASI
+================================================================================
+
+VERSION 2.0 (November 2025):
+✅ PWA full support (install ke home screen)
+✅ Fingerprint login (biometric authentication)
+✅ Browser access blocking (security)
+✅ Session separation PWA vs Browser
+✅ Auto-crop agunan dengan OpenCV
+✅ Dark mode support
+✅ Faster loading & optimized performance
+✅ Better mobile UI/UX
+✅ Offline indicator
+✅ Auto compress large images
+
+
+VERSION 1.0 (2024):
+- Initial release
+- Basic capture & upload
+- Web-based only
+
+
+================================================================================
+                        Versi: 2.0 Mobile Edition
+                    © 2025 BPR NTB - IT Department
+================================================================================

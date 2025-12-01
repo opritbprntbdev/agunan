@@ -1,86 +1,44 @@
-// Service Worker untuk PWA
-const CACHE_NAME = 'agunan-capture-v2'; // Bumped version to force update
+// Service Worker untuk PWA - Minimal untuk fast install
+const CACHE_NAME = 'agunan-capture-v3';
 const urlsToCache = [
-  '/agunan-capture/assets/css/style.css',
-  '/agunan-capture/assets/css/mobile.css'
+  // Minimal cache - hanya icon untuk fast install
 ];
 
-// Install event - cache files
+// Install event - cache minimal files
 self.addEventListener("install", (event) => {
+  console.log('SW: Installing...');
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => {
-        console.log("Cache opened");
-        return cache.addAll(
-          urlsToCache.map((url) => new Request(url, { cache: "reload" }))
-        );
-      })
-      .catch((err) => {
-        console.log("Cache install error:", err);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('SW: Cache opened');
+      return cache.addAll(urlsToCache);
+    })
   );
+  // Skip waiting untuk langsung aktif
   self.skipWaiting();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first (no caching for faster performance)
 self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-  
-  // Skip cross-origin requests
-  if (!event.request.url.startsWith(self.location.origin)) {
-    return;
-  }
-
-  // SKIP ALL PHP FILES - only cache static assets
-  if (url.pathname.endsWith('.php') || 
-      url.pathname.includes('/process/') ||
-      url.pathname.includes('/ui/') ||
-      url.pathname === '/agunan-capture/' ||
-      url.pathname === '/agunan-capture/index.php') {
-    // Let browser handle PHP pages directly (no caching, no intercepting)
-    return;
-  }
-
-  // Only cache static files (CSS, JS, images)
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        
-        return fetch(event.request).then(response => {
-          // Only cache successful responses for static files
-          if (response && response.status === 200) {
-            const responseToCache = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return response;
-        });
-      })
-      .catch(() => {
-        // Network failed, return cached or error
-        return new Response('Offline', { status: 503 });
-      })
-  );
+  // Skip caching - always fetch from network for fastest response
+  // This makes PWA work like a normal website but with install capability
+  return;
 });
 
 // Activate event - cleanup old caches
 self.addEventListener("activate", (event) => {
+  console.log('SW: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log("Deleting old cache:", cacheName);
+            console.log("SW: Deleting old cache:", cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
+  // Take control immediately
+  return self.clients.claim();
 });

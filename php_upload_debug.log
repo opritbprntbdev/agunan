@@ -1,0 +1,5 @@
+[24-Nov-2025 02:15:58 UTC] PHP Fatal error:  Uncaught mysqli_sql_exception: Unknown column 'verified_data' in 'field list' in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php:90
+Stack trace:
+#0 C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php(90): mysqli->prepare('\r\n            I...')
+#1 {main}
+  thrown in C:\wamp64\www\agunan-capture\process\upload_voucher_photo.php on line 90

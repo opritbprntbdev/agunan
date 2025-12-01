@@ -1,9 +1,8 @@
 <?php
 session_start();
-if (!isset($_SESSION['login'])) {
-    header("Location: ../index.php");
-    exit;
-}
+
+// CRITICAL SECURITY: Load agunan guard
+require_once '../agunan_guard.php';
 
 $nama_kc = $_SESSION['nama_kc'];
 $username = $_SESSION['username'];
@@ -38,6 +37,16 @@ $username = $_SESSION['username'];
         .badge { padding:4px 8px; border-radius:999px; background:#0b1220; border:1px solid #334155; font-size:12px; }
         .success { color:#16a34a; }
         .error { color:#ef4444; }
+        .preview-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap:8px; margin-top:12px; }
+        .preview-item { background:#1e293b; border:1px solid #334155; border-radius:8px; overflow:hidden; }
+        .preview-item img { width:100%; height:120px; object-fit:cover; display:block; }
+        .preview-item .info { padding:6px; font-size:11px; color:#94a3b8; }
+        .preview-item .btn-remove { width:100%; padding:6px; font-size:11px; }
+        .toast { position:fixed; top:70px; right:12px; background:#16a34a; color:#fff; padding:12px 16px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:9999; animation:slideIn 0.3s ease-out; }
+        .toast.error { background:#ef4444; }
+        @keyframes slideIn { from { transform:translateX(400px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+        .toast-exit { animation:slideOut 0.3s ease-in forwards; }
+        @keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(400px); opacity:0; } }
     </style>
 </head>
 <body>
@@ -53,18 +62,25 @@ $username = $_SESSION['username'];
                 <input class="input" id="no_rek" placeholder="No Rekening Kredit" required>
             </div>
             <div class="card-body">
+                <!-- Kamera SELALU TAMPIL, tidak pernah hidden -->
         <video id="preview" playsinline autoplay muted></video>
         <canvas id="canvas" hidden></canvas>
-        <img id="snapshot" alt="Snapshot" hidden>
         <input type="file" id="fileFallback" accept="image/*;capture=camera" hidden>
+                
                 <div class="hint" id="supportHint">Membuka kamera belakang…</div>
+                
                 <div class="toolbar">
                     <button class="btn secondary" id="switchBtn" title="Ganti kamera">🔁 Ganti</button>
                     <button class="btn secondary" id="torchBtn" title="Senter" disabled>💡 Torch</button>
-                    <button class="btn" id="captureBtn">📷 Ambil</button>
-                    <button class="btn" id="retakeBtn" hidden>↩️ Ulangi</button>
-          <button class="btn" id="uploadBtn" hidden>⬆️ Upload</button>
+                    <button class="btn" id="captureBtn">📷 Ambil Foto</button>
           <button class="btn secondary" id="fallbackBtn" hidden>Pilih Foto (Fallback)</button>
+                </div>
+                
+                <!-- Preview Grid SELALU DI BAWAH kamera untuk foto-foto yang sudah diambil -->
+                <div id="previewGrid" class="preview-grid" style="display:none;"></div>
+                
+                <div style="text-align:center; margin-top:12px;">
+                    <button class="btn" id="uploadAllBtn" hidden style="width:100%; max-width:400px;">⬆️ Upload Semua Foto</button>
                 </div>
                 <div class="row" style="justify-content:center; gap:12px; margin-top:6px;">
                     <span class="badge" id="statusBadge">Ready</span>
@@ -85,16 +101,16 @@ let mediaStreamTrack = null;
 let torchSupported = false;
 let agunanDataId = null; // dari server setelah upload pertama
 let nextOrder = 1;
+let capturedPhotos = []; // Array untuk simpan foto-foto yang sudah diambil
 
 const els = {
   video: document.getElementById('preview'),
   canvas: document.getElementById('canvas'),
-  img: document.getElementById('snapshot'),
+  previewGrid: document.getElementById('previewGrid'),
   torchBtn: document.getElementById('torchBtn'),
   switchBtn: document.getElementById('switchBtn'),
   captureBtn: document.getElementById('captureBtn'),
-  retakeBtn: document.getElementById('retakeBtn'),
-  uploadBtn: document.getElementById('uploadBtn'),
+  uploadAllBtn: document.getElementById('uploadAllBtn'),
   supportHint: document.getElementById('supportHint'),
   kbBadge: document.getElementById('kbBadge'),
   order: document.getElementById('order'),
@@ -105,6 +121,18 @@ const els = {
   fileFallback: document.getElementById('fileFallback'),
   fallbackBtn: document.getElementById('fallbackBtn'),
 };
+
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = 'toast' + (type === 'error' ? ' error' : '');
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
 
 function setStatus(text, cls='') {
   els.status.textContent = text;
@@ -178,27 +206,77 @@ function captureFrame() {
 
   // Preview sebagai data URL agar cepat tampil
   const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-  els.img.src = dataUrl;
   const sizeKB = Math.round((dataUrl.length * 3 / 4) / 1024);
-  els.kbBadge.textContent = sizeKB + ' KB';
+  
+  // Tambahkan ke array
+  const photoNumber = capturedPhotos.length + 1;
+  capturedPhotos.push({
+    dataUrl: dataUrl,
+    sizeKB: sizeKB,
+    order: photoNumber,
+    timestamp: new Date().toLocaleString('id-ID')
+  });
+  
+  // Update UI
+  renderPreviewGrid();
+  showToast(`✅ Foto ${photoNumber} berhasil diambil (${sizeKB} KB)`, 'success');
+  
+  // Update counter
+  els.order.textContent = String(photoNumber + 1);
+  setStatus(`${photoNumber} foto diambil`, 'success');
+  
+  // Show upload button jika ada foto
+  if (capturedPhotos.length > 0) {
+    els.uploadAllBtn.hidden = false;
+  }
 }
 
-function showPreviewMode(on) {
-  els.video.hidden = on;
-  els.img.hidden = !on;
-  els.retakeBtn.hidden = !on;
-  els.uploadBtn.hidden = !on;
-  els.captureBtn.hidden = on;
+function renderPreviewGrid() {
+  if (capturedPhotos.length === 0) {
+    els.previewGrid.style.display = 'none';
+    return;
+  }
+  
+  els.previewGrid.style.display = 'grid';
+  els.previewGrid.innerHTML = '';
+  
+  capturedPhotos.forEach((photo, index) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    item.innerHTML = `
+      <img src="${photo.dataUrl}" alt="Foto ${photo.order}">
+      <div class="info">
+        📷 Foto ${photo.order} · ${photo.sizeKB} KB<br>
+        🕐 ${photo.timestamp}
+      </div>
+      <button class="btn danger btn-remove" onclick="removePhoto(${index})">🗑️ Hapus</button>
+    `;
+    els.previewGrid.appendChild(item);
+  });
 }
+
+function removePhoto(index) {
+  if (confirm(`Hapus Foto ${capturedPhotos[index].order}?`)) {
+    capturedPhotos.splice(index, 1);
+    renderPreviewGrid();
+    showToast('Foto dihapus', 'success');
+    
+    if (capturedPhotos.length === 0) {
+      els.uploadAllBtn.hidden = true;
+      els.order.textContent = '1';
+      setStatus('Siap ambil foto', 'success');
+    } else {
+      els.order.textContent = String(capturedPhotos.length + 1);
+      setStatus(`${capturedPhotos.length} foto diambil`, 'success');
+    }
+  }
+}
+
+// Expose ke window untuk onclick
+window.removePhoto = removePhoto;
 
 els.captureBtn.addEventListener('click', () => {
   captureFrame();
-  showPreviewMode(true);
-});
-
-els.retakeBtn.addEventListener('click', () => {
-  showPreviewMode(false);
-  setStatus('Siap ambil lagi');
 });
 
 els.switchBtn.addEventListener('click', async () => {
@@ -214,45 +292,78 @@ async function dataURLToBlob(dataURL) {
   return await res.blob();
 }
 
-async function uploadSnapshot() {
+async function uploadAllPhotos() {
   const id_agunan = els.id_agunan.value.trim();
   const nama_nasabah = els.nama_nasabah.value.trim();
   const no_rek = els.no_rek.value.trim();
+  
   if (!id_agunan || !nama_nasabah || !no_rek) {
     alert('Lengkapi ID Agunan, Nama Nasabah, dan No Rek');
     return;
   }
-  setStatus('Mengunggah…');
-
-  const blob = await dataURLToBlob(els.img.src);
-  const form = new FormData();
-  form.append('image', blob, 'capture.jpg');
-  form.append('id_agunan', id_agunan);
-  form.append('nama_nasabah', nama_nasabah);
-  form.append('no_rek', no_rek);
-  form.append('ket', 'Foto ' + nextOrder);
-  if (agunanDataId) form.append('agunan_data_id', agunanDataId);
-
-  try {
-    const resp = await fetch('../process/upload_photo.php', { method: 'POST', body: form, credentials: 'same-origin' });
-    const json = await resp.json();
-    if (json.success) {
-      agunanDataId = json.agunan_data_id;
-      nextOrder = json.next_order;
-      els.order.textContent = String(nextOrder);
-      setStatus('Tersimpan (' + (nextOrder-1) + ') ✅', 'success');
-      showPreviewMode(false);
-    } else {
-      throw new Error(json.message || 'Gagal simpan');
-    }
-  } catch (e) {
-    console.error(e);
-    setStatus('Upload gagal', 'error');
-    alert('Upload gagal: ' + e.message);
+  
+  if (capturedPhotos.length === 0) {
+    alert('Belum ada foto yang diambil');
+    return;
   }
+  
+  els.uploadAllBtn.disabled = true;
+  els.uploadAllBtn.textContent = '⏳ Uploading...';
+  setStatus('Mengunggah foto...');
+  
+  let uploaded = 0;
+  
+  for (let i = 0; i < capturedPhotos.length; i++) {
+    const photo = capturedPhotos[i];
+    
+    try {
+      const blob = await dataURLToBlob(photo.dataUrl);
+      const form = new FormData();
+      form.append('image', blob, `capture_${photo.order}.jpg`);
+      form.append('id_agunan', id_agunan);
+      form.append('nama_nasabah', nama_nasabah);
+      form.append('no_rek', no_rek);
+      form.append('ket', `Foto ${photo.order}`);
+      if (agunanDataId) form.append('agunan_data_id', agunanDataId);
+
+      const resp = await fetch('../process/upload_photo.php', { 
+        method: 'POST', 
+        body: form, 
+        credentials: 'same-origin' 
+      });
+      const json = await resp.json();
+      
+      if (json.success) {
+        agunanDataId = json.agunan_data_id;
+        uploaded++;
+        setStatus(`Upload ${uploaded}/${capturedPhotos.length}...`);
+      } else {
+        throw new Error(json.message || 'Gagal upload');
+      }
+    } catch (e) {
+      console.error(e);
+      alert(`Upload gagal pada foto ${photo.order}: ${e.message}`);
+      els.uploadAllBtn.disabled = false;
+      els.uploadAllBtn.textContent = '⬆️ Upload Semua';
+      return;
+    }
+  }
+  
+  // Semua berhasil
+  showToast(`✅ Semua ${uploaded} foto berhasil diupload!`, 'success');
+  setStatus('Upload selesai ✅', 'success');
+  
+  // Reset
+  capturedPhotos = [];
+  renderPreviewGrid();
+  nextOrder = uploaded + 1;
+  els.order.textContent = String(nextOrder);
+  els.uploadAllBtn.hidden = true;
+  els.uploadAllBtn.disabled = false;
+  els.uploadAllBtn.textContent = '⬆️ Upload Semua';
 }
 
-els.uploadBtn.addEventListener('click', uploadSnapshot);
+els.uploadAllBtn.addEventListener('click', uploadAllPhotos);
 
 // Fallback pilih foto dari galeri/kamera
 els.fallbackBtn.addEventListener('click', () => els.fileFallback.click());
@@ -272,10 +383,23 @@ els.fileFallback.addEventListener('change', async (e) => {
       const ctx = canvas.getContext('2d');
       ctx.drawImage(tempImg, 0, 0, w, h);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      els.img.src = dataUrl;
       const sizeKB = Math.round((dataUrl.length * 3 / 4) / 1024);
-      els.kbBadge.textContent = sizeKB + ' KB';
-      showPreviewMode(true);
+      
+      // Tambahkan ke capturedPhotos array
+      const photoNumber = capturedPhotos.length + 1;
+      capturedPhotos.push({
+        dataUrl: dataUrl,
+        sizeKB: sizeKB,
+        order: photoNumber,
+        timestamp: new Date().toLocaleString('id-ID')
+      });
+      
+      renderPreviewGrid();
+      showToast(`✅ Foto ${photoNumber} berhasil dipilih (${sizeKB} KB)`, 'success');
+      els.order.textContent = String(photoNumber + 1);
+      setStatus(`${photoNumber} foto diambil`, 'success');
+      els.uploadAllBtn.hidden = false;
+      
       URL.revokeObjectURL(url);
       res();
     };

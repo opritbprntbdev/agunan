@@ -1,0 +1,367 @@
+================================================================================
+            STANDARD OPERATING PROCEDURE (SOP)
+        DEPLOYMENT & INSTALLATION AGUNAN CAPTURE PWA
+                    BPR NTB - IT DEPARTMENT
+================================================================================
+
+SOP No    : IT-SOP-001/2025
+Revisi    : 1.0
+Tanggal   : 26 November 2025
+Dibuat    : IT Development Team
+Disetujui : Kepala Divisi IT
+
+
+================================================================================
+                        1. TUJUAN & RUANG LINGKUP
+================================================================================
+
+1.1 TUJUAN
+Dokumen ini mengatur prosedur standar untuk deployment dan instalasi aplikasi
+Agunan Capture PWA ke production server BPR NTB.
+
+1.2 RUANG LINGKUP
+- Deployment aplikasi ke production server
+- Instalasi database dan migration
+- Konfigurasi server (Apache/Nginx)
+- SSL Certificate setup
+- Testing & validation
+
+
+================================================================================
+                        2. REFERENSI
+================================================================================
+
+- Manual Teknis Agunan Capture v2.0
+- Panduan Instalasi PWA untuk User
+- Security Policy BPR NTB
+- IT Infrastructure Standard
+
+
+================================================================================
+                    3. DEFINISI & SINGKATAN
+================================================================================
+
+PWA         : Progressive Web App
+SSL         : Secure Socket Layer
+HTTPS       : Hypertext Transfer Protocol Secure
+KC          : Kantor Cabang
+SOP         : Standard Operating Procedure
+UAT         : User Acceptance Testing
+
+
+================================================================================
+                4. TANGGUNG JAWAB & WEWENANG
+================================================================================
+
+4.1 IT DEVELOPER
+- Melakukan deployment kode aplikasi
+- Menjalankan database migration
+- Testing fungsionalitas aplikasi
+- Dokumentasi perubahan
+
+4.2 IT SYSTEM ADMINISTRATOR
+- Setup & konfigurasi server
+- Instalasi SSL certificate
+- Monitoring performa server
+- Backup database & files
+
+4.3 IT MANAGER
+- Review deployment plan
+- Approval deployment ke production
+- Koordinasi dengan stakeholder
+- Sign-off setelah UAT
+
+4.4 KEPALA DIVISI IT
+- Final approval deployment
+- Keputusan rollback jika ada critical issue
+- Eskalasi ke manajemen
+
+
+================================================================================
+            5. PROSEDUR DEPLOYMENT KE PRODUCTION
+================================================================================
+
+5.1 PRE-DEPLOYMENT CHECKLIST
+--------------------------------------------------------------------------------
+□ Backup database production (agunan_capture & bprntb)
+□ Backup files aplikasi existing
+□ Review change log & release notes
+□ Koordinasi downtime dengan user (jika perlu)
+□ Siapkan rollback plan
+□ Testing di staging environment selesai
+□ Approval deployment dari IT Manager
+
+
+5.2 DEPLOYMENT STEPS
+--------------------------------------------------------------------------------
+
+STEP 1: BACKUP DATABASE & FILES
+Tanggal: [TANGGAL]
+PIC: System Administrator
+
+Eksekusi:
+$ ssh root@191.69.1.24
+$ cd /var/www/html/agunan-capture
+$ mysqldump -u root -p agunan_capture > backup/agunan_capture_$(date +%Y%m%d_%H%M%S).sql
+$ tar -czf backup/agunan_capture_files_$(date +%Y%m%d_%H%M%S).tar.gz ./*
+$ ls -lh backup/
+
+Verifikasi:
+- File backup .sql & .tar.gz berhasil dibuat
+- Ukuran file backup wajar (tidak 0 bytes)
+
+
+STEP 2: UPLOAD FILES KE PRODUCTION
+Tanggal: [TANGGAL]
+PIC: IT Developer
+
+Opsi A - Via FTP/SFTP:
+- Connect ke 191.69.1.24 via FileZilla/WinSCP
+- Upload folder: assets/, process/, ui/, vendor/
+- Upload files: index.php, home.php, manifest.json, sw.js, config.php
+- Upload files baru: migration_webauthn.sql, process/webauthn_*.php
+
+Opsi B - Via Git (Recommended):
+$ cd /var/www/html/agunan-capture
+$ git pull origin main
+$ composer install --no-dev
+$ chown -R www-data:www-data ./*
+$ chmod 755 process/ ui/
+$ chmod 644 *.php
+
+Verifikasi:
+- Semua files terupload dengan timestamp terbaru
+- File permission correct (755 untuk folder, 644 untuk files)
+
+
+STEP 3: DATABASE MIGRATION
+Tanggal: [TANGGAL]
+PIC: IT Developer
+
+Eksekusi:
+$ mysql -u root -p agunan_capture < migration_webauthn.sql
+$ mysql -u root -p agunan_capture -e "DESC user_webauthn_credentials;"
+$ mysql -u root -p agunan_capture -e "SELECT COUNT(*) FROM user;"
+
+Verifikasi:
+- Tabel user_webauthn_credentials berhasil dibuat
+- Struktur tabel sesuai dengan migration file
+- Tidak ada error saat eksekusi migration
+
+
+STEP 4: KONFIGURASI SERVER
+Tanggal: [TANGGAL]
+PIC: System Administrator
+
+Apache Configuration:
+$ nano /etc/apache2/sites-available/appdev.bprntb.co.id.conf
+
+---
+<VirtualHost *:443>
+    ServerName appdev.bprntb.co.id
+    DocumentRoot /var/www/html
+    
+    <Directory /var/www/html/app/agunan-capture>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/bprntb.crt
+    SSLCertificateKeyFile /etc/ssl/private/bprntb.key
+    
+    ErrorLog ${APACHE_LOG_DIR}/agunan_error.log
+    CustomLog ${APACHE_LOG_DIR}/agunan_access.log combined
+</VirtualHost>
+---
+
+$ a2ensite appdev.bprntb.co.id
+$ systemctl reload apache2
+
+Verifikasi:
+- Apache reload sukses tanpa error
+- Port 443 listening (netstat -tlnp | grep :443)
+- SSL certificate valid
+
+
+STEP 5: TESTING & VALIDATION
+Tanggal: [TANGGAL]
+PIC: IT Developer & QA Team
+
+TEST CHECKLIST:
+□ URL production dapat diakses via HTTPS
+□ Halaman login tampil dengan benar
+□ Login dengan username/password berhasil
+□ PWA install button muncul
+□ Install PWA berhasil (muncul icon di home screen)
+□ Login dari PWA berhasil
+□ Browser blocking berfungsi (login di browser diblokir)
+□ Fingerprint registration berhasil
+□ Fingerprint login berhasil
+□ Session separation PWA vs Browser berfungsi
+□ Foto agunan berhasil upload
+□ Preview PDF berhasil
+□ Logout berhasil
+
+Verifikasi:
+- Semua test case passed
+- Tidak ada error di browser console
+- Tidak ada error di server log (/var/log/apache2/agunan_error.log)
+
+
+STEP 6: USER ACCEPTANCE TESTING (UAT)
+Tanggal: [TANGGAL]
+PIC: IT Manager + User Representative (KC)
+
+UAT Scenario:
+1. Install PWA di HP Android/iOS
+2. Login dengan kredensial KC
+3. Aktivasi fingerprint
+4. Foto 5 voucher agunan
+5. Preview hasil foto
+6. Update 1 foto
+7. Logout dan login ulang dengan fingerprint
+
+UAT Sign-off:
+Nama        : [NAMA USER]
+Jabatan     : [JABATAN]
+Tanggal     : [TANGGAL]
+Catatan     : [CATATAN UAT]
+Tanda Tangan: [_______________]
+
+
+STEP 7: GO-LIVE & MONITORING
+Tanggal: [TANGGAL]
+PIC: System Administrator
+
+Post-Deployment Actions:
+□ Announce aplikasi sudah live via email/WA group
+□ Kirim panduan instalasi & login ke user
+□ Monitor server resource (CPU, RAM, Disk)
+□ Monitor error log selama 24 jam pertama
+□ Siap standby untuk troubleshooting
+
+Monitoring Command:
+$ tail -f /var/log/apache2/agunan_error.log
+$ htop
+$ df -h
+$ mysql -u root -p agunan_capture -e "SELECT COUNT(*) FROM voucher_data WHERE DATE(created_at) = CURDATE();"
+
+
+================================================================================
+                    6. ROLLBACK PROCEDURE
+================================================================================
+
+KAPAN ROLLBACK DILAKUKAN:
+- Critical bug yang block semua user
+- Data corruption/loss
+- Security vulnerability terdeteksi
+- Performa sangat lambat (>10 detik loading)
+- Approval rollback dari IT Manager/Kepala Divisi
+
+ROLLBACK STEPS:
+--------------------------------------------------------------------------------
+
+STEP 1: STOP APPLICATION
+$ ssh root@191.69.1.24
+$ systemctl stop apache2
+
+STEP 2: RESTORE DATABASE
+$ mysql -u root -p agunan_capture < backup/agunan_capture_[TIMESTAMP].sql
+
+STEP 3: RESTORE FILES
+$ cd /var/www/html/agunan-capture
+$ rm -rf ./*
+$ tar -xzf backup/agunan_capture_files_[TIMESTAMP].tar.gz
+
+STEP 4: RESTART APPLICATION
+$ systemctl start apache2
+$ curl -I https://appdev.bprntb.co.id/app/agunan-capture/
+
+STEP 5: VERIFY ROLLBACK
+- Test login dari browser
+- Test basic functionality
+- Confirm dengan user aplikasi sudah normal
+
+STEP 6: ROOT CAUSE ANALYSIS
+- Identifikasi penyebab kegagalan deployment
+- Dokumentasi lesson learned
+- Fix issue di development
+- Re-deploy setelah fix verified
+
+
+================================================================================
+                7. POST-DEPLOYMENT CHECKLIST
+================================================================================
+
+□ Deployment berhasil tanpa error
+□ UAT sign-off diterima
+□ Monitoring 24 jam pertama OK
+□ User sudah bisa akses aplikasi
+□ Tidak ada komplain dari user
+□ Dokumentasi deployment lengkap
+□ Backup post-deployment tersimpan
+□ Update tracking log deployment
+
+
+================================================================================
+                    8. TRACKING LOG DEPLOYMENT
+================================================================================
+
+| Tanggal | Versi | PIC | Status | Catatan |
+|---------|-------|-----|--------|---------|
+| [DATE] | 2.0 | [NAMA] | Success | Initial PWA deployment |
+|         |     |        |         | dengan fingerprint auth |
+
+
+================================================================================
+                        9. KONTAK DARURAT
+================================================================================
+
+IT Developer: [NAMA] - [HP/WA]
+System Admin: [NAMA] - [HP/WA]
+IT Manager: [NAMA] - [HP/WA]
+Kepala IT: [NAMA] - [HP/WA]
+
+
+================================================================================
+                    10. LAMPIRAN
+================================================================================
+
+Lampiran A: Server Specification
+Lampiran B: Database Schema
+Lampiran C: Release Notes v2.0
+Lampiran D: User Guide
+Lampiran E: Troubleshooting Guide
+
+
+================================================================================
+                    APPROVAL & SIGN-OFF
+================================================================================
+
+Dibuat oleh:
+Nama        : [NAMA IT DEVELOPER]
+Jabatan     : IT Developer
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+Direview oleh:
+Nama        : [NAMA IT MANAGER]
+Jabatan     : IT Manager
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+Disetujui oleh:
+Nama        : [NAMA KEPALA IT]
+Jabatan     : Kepala Divisi IT
+Tanggal     : [TANGGAL]
+Tanda Tangan: [_______________]
+
+
+================================================================================
+                        END OF DOCUMENT
+                © 2025 BPR NTB - IT Department
+================================================================================

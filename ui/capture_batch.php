@@ -1,9 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['login'])) {
-  header('Location: ../index.php');
-  exit;
-}
+
+// CRITICAL SECURITY: Load agunan guard
+require_once '../agunan_guard.php';
+
 $nama_kc = $_SESSION['nama_kc'] ?? '';
 $username = $_SESSION['username'] ?? '';
 ?>
@@ -319,6 +319,28 @@ $username = $_SESSION['username'] ?? '';
       background: #22c55e;
       width: 0%
     }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 
@@ -370,9 +392,18 @@ $username = $_SESSION['username'] ?? '';
       <div class="toolbar">
         <button class="btn secondary" id="switchBtn">🔁 Ganti</button>
         <button class="btn" id="captureBtn" disabled>📸 Ambil</button>
-        <button class="btn secondary" id="finishBtn" disabled>✅ Selesai</button>
         <span class="badge" id="status">Pilih agunan terlebih dahulu</span>
         <span class="badge">Foto: <span id="count">0</span>/20</span>
+      </div>
+      
+      <!-- Preview Thumbnails LANGSUNG DI BAWAH KAMERA -->
+      <div id="livePreview" style="padding:12px;display:none;">
+        <div style="font-weight:600;margin-bottom:8px;color:#2563eb;">📷 Preview Foto yang Sudah Diambil:</div>
+        <div class="thumbs" id="livePreviewGrid"></div>
+      </div>
+      
+      <div style="padding:12px;text-align:center;">
+        <button class="btn success" id="finishBtn" disabled style="width:100%;max-width:400px;">⬆️ Upload Semua Foto</button>
       </div>
     </div>
 
@@ -428,6 +459,8 @@ $username = $_SESSION['username'] ?? '';
       switchBtn: document.getElementById('switchBtn'),
       captureBtn: document.getElementById('captureBtn'),
       finishBtn: document.getElementById('finishBtn'),
+      livePreview: document.getElementById('livePreview'),
+      livePreviewGrid: document.getElementById('livePreviewGrid'),
       reviewCard: document.getElementById('reviewCard'),
       thumbs: document.getElementById('thumbs'),
       reviewInfo: document.getElementById('reviewInfo'),
@@ -714,15 +747,66 @@ $username = $_SESSION['username'] ?? '';
     }
 
     function updateCount() { els.count.textContent = String(queue.length); }
+    
+    // Fungsi untuk show toast notification
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed;top:70px;right:12px;background:' + (type === 'success' ? '#16a34a' : '#ef4444') + ';color:#fff;padding:12px 16px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:9999;animation:slideIn 0.3s ease-out';
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.style.animation = 'slideOut 0.3s ease-in forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    // Render live preview thumbnails
+    function renderLivePreview() {
+      if (queue.length === 0) {
+        els.livePreview.style.display = 'none';
+        return;
+      }
+      
+      els.livePreview.style.display = 'block';
+      els.livePreviewGrid.innerHTML = '';
+      
+      queue.forEach((it, i) => {
+        const div = document.createElement('div');
+        div.className = 'thumb';
+        div.innerHTML = `<img src="${it.dataUrl}"><div class="controls"><button class='btn danger' onclick='removeFromLive(${i})' style="width:100%;font-size:12px;">🗑️ Hapus</button></div>`;
+        els.livePreviewGrid.appendChild(div);
+      });
+    }
+    
+    // Hapus foto dari live preview
+    window.removeFromLive = function(idx) {
+      if (confirm('Hapus foto ini?')) {
+        queue.splice(idx, 1);
+        updateCount();
+        renderLivePreview();
+        showToast('Foto dihapus', 'success');
+        
+        if (queue.length === 0) {
+          els.finishBtn.disabled = true;
+        }
+      }
+    };
 
     function capture() {
       if (queue.length >= limit) { alert('Batas 20 foto tercapai'); return; }
       const v = els.preview, c = els.canvas, ctx = c.getContext('2d');
       const w = v.videoWidth || 1280; const h = v.videoHeight || 720;
       c.width = w; c.height = h; ctx.drawImage(v, 0, 0, w, h);
-      const url = c.toDataURL('image/jpeg', 0.92); // biarkan kualitas tinggi; backend yang proses berat
+      const url = c.toDataURL('image/jpeg', 0.92);
       queue.push({ dataUrl: url });
+      
+      const fotoNum = queue.length;
       updateCount();
+      renderLivePreview(); // LANGSUNG RENDER PREVIEW
+      showToast(`✅ Foto ${fotoNum} berhasil diambil`, 'success'); // SHOW TOAST
+      
+      // Enable tombol upload
+      els.finishBtn.disabled = false;
     }
 
     function toReview() {
@@ -861,7 +945,7 @@ $username = $_SESSION['username'] ?? '';
       setStatus('Kamera siap ✅');
     });
     els.captureBtn.addEventListener('click', capture);
-    els.finishBtn.addEventListener('click', toReview);
+    els.finishBtn.addEventListener('click', uploadAll); // LANGSUNG UPLOAD, tidak ke review
     els.backToCamera.addEventListener('click', backCamera);
     els.saveAllBtn.addEventListener('click', uploadAll);
 

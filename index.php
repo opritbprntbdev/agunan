@@ -28,11 +28,10 @@ if (isset($_SESSION['login'])) {
     <link rel="manifest" href="manifest.json">
 
     <!-- Icons -->
-    <link rel="icon" type="image/svg+xml" href="assets/icon-192.svg">
-    <link rel="apple-touch-icon" href="assets/icon-192.svg">
+    <link rel="icon" type="image/png" href="assets/icon-192.png">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
 
     <title>📱 Login Agunan Capture</title>
-    <link rel="stylesheet" href="assets/css/style.css">
     <style>
         /* Reset dan Base Styles untuk Mobile */
         * {
@@ -238,6 +237,32 @@ if (isset($_SESSION['login'])) {
             background: #ccc;
             cursor: not-allowed;
             opacity: 0.7;
+        }
+
+        .pwa-install-btn {
+            width: 100%;
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 12px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .pwa-install-btn:active {
+            background: #059669;
+        }
+
+        .pwa-install-btn.show {
+            display: flex;
         }
 
         .loading-spinner {
@@ -539,6 +564,11 @@ if (isset($_SESSION['login'])) {
             </div>
         <?php endif; ?>
 
+        <!-- Fingerprint Login Button -->
+        <button type="button" class="pwa-install-btn" id="fingerprintBtn" style="display: none; margin-bottom: 16px;">
+            🔐 <span>Login dengan Fingerprint</span>
+        </button>
+
         <form id="loginForm" method="POST" action="login_proses.php">
             <div class="mobile-form-group">
                 <label class="mobile-label" for="username">👤 Username</label>
@@ -561,6 +591,10 @@ if (isset($_SESSION['login'])) {
                 <span id="btnText">🚀 Masuk ke Sistem</span>
             </button>
         </form>
+
+        <button class="pwa-install-btn" id="installBtn" style="display: none;">
+            📥 <span>Install Aplikasi</span>
+        </button>
 
         <div class="mobile-footer">
             <div class="mobile-features">
@@ -609,6 +643,26 @@ if (isset($_SESSION['login'])) {
 
         // Load saved theme on page load
         window.addEventListener('DOMContentLoaded', function () {
+            // Clear PWA token kalau buka dari browser (deteksi uninstall)
+            if (!isPWAMode()) {
+                localStorage.removeItem('pwa_auth_token');
+
+                // Hide tombol login di browser - hanya show di PWA
+                const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) {
+                    loginBtn.style.display = 'none';
+                }
+
+                // Tambahkan pesan untuk install PWA
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    const warningMsg = document.createElement('div');
+                    warningMsg.style.cssText = 'padding:16px;text-align:center;color:#d97706;background:#fef3c7;border-radius:12px;margin-top:12px;font-size:14px;';
+                    warningMsg.innerHTML = '⚠️ <strong>Login hanya tersedia via aplikasi</strong><br><br>Silakan install aplikasi dengan klik tombol di bawah.';
+                    loginForm.appendChild(warningMsg);
+                }
+            }
+
             const savedTheme = localStorage.getItem('theme');
             const body = document.body;
             const themeToggle = document.getElementById('themeToggle');
@@ -619,7 +673,21 @@ if (isset($_SESSION['login'])) {
                 themeToggle.classList.add('active');
                 themeLabel.textContent = '☀️ Light Mode';
             }
+
+            // Check fingerprint availability
+            checkFingerprintAvailability();
         });
+
+        // Universal PWA detection function
+        function isPWAMode() {
+            // Check multiple indicators for PWA
+            const displayMode = window.matchMedia('(display-mode: fullscreen)').matches ||
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.matchMedia('(display-mode: minimal-ui)').matches;
+            const standalone = window.navigator.standalone === true;
+
+            return displayMode || standalone;
+        }
 
         function togglePassword() {
             const passwordInput = document.getElementById('password');
@@ -644,6 +712,16 @@ if (isset($_SESSION['login'])) {
             const loginBtn = document.getElementById('loginBtn');
             const btnText = document.getElementById('btnText');
             const spinner = document.getElementById('loadingSpinner');
+
+            // BLOKIR login dari browser - hanya allow dari PWA
+            if (!isPWAMode()) {
+                e.preventDefault(); // Stop form submission
+                alert('❌ Login via browser dinonaktifkan!\n\n✅ Silakan install aplikasi terlebih dahulu dengan klik tombol "📥 Install Aplikasi" di bawah.');
+                return false;
+            }
+
+            // Set PWA auth token jika login dari PWA
+            localStorage.setItem('pwa_auth_token', 'authenticated_' + Date.now());
 
             // Show loading state
             loginBtn.disabled = true;
@@ -718,19 +796,147 @@ if (isset($_SESSION['login'])) {
 
         // PWA Install Prompt
         let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            console.log('💾 PWA installable');
 
-            // Optional: Show custom install button
-            // You can add UI here to prompt user to install
+            // Show install button
+            installBtn.style.display = 'flex';
+            installBtn.classList.add('show');
         });
+
+        // Handle install button click
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+
+                // Show install prompt
+                deferredPrompt.prompt();
+
+                // Wait for user choice
+                const { outcome } = await deferredPrompt.userChoice;
+
+                if (outcome === 'accepted') {
+                    // Hide install button
+                    installBtn.style.display = 'none';
+                    installBtn.classList.remove('show');
+
+                    // Hide login form - paksa user buka dari aplikasi
+                    const loginForm = document.getElementById('loginForm');
+                    const loginBtn = document.getElementById('loginBtn');
+                    if (loginForm) loginForm.style.display = 'none';
+                    if (loginBtn) loginBtn.style.display = 'none';
+
+                    // Show message
+                    const container = document.querySelector('.mobile-login-container');
+                    const successMsg = document.createElement('div');
+                    successMsg.style.cssText = 'padding:20px;text-align:center;color:#059669;background:#d1fae5;border-radius:12px;margin-top:20px;';
+                    successMsg.innerHTML = '✅ <strong>Aplikasi sudah terinstall!</strong><br><br>Silakan buka aplikasi dari home screen HP Anda.<br><br>🚫 Login via browser dinonaktifkan.';
+                    container.appendChild(successMsg);
+                }
+
+                deferredPrompt = null;
+            });
+        }
 
         window.addEventListener('appinstalled', () => {
-            console.log('✅ PWA installed successfully');
+            // Hide install button after successful install
+            installBtn.style.display = 'none';
+            installBtn.classList.remove('show');
             deferredPrompt = null;
+
+            // Hide login form juga
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            if (loginForm) loginForm.style.display = 'none';
+            if (loginBtn) loginBtn.style.display = 'none';
+
+            // Show success message
+            const container = document.querySelector('.mobile-login-container');
+            const successMsg = document.createElement('div');
+            successMsg.style.cssText = 'padding:20px;text-align:center;color:#059669;background:#d1fae5;border-radius:12px;margin-top:20px;';
+            successMsg.innerHTML = '✅ <strong>Aplikasi berhasil terinstall!</strong><br><br>Silakan buka aplikasi dari home screen HP Anda.<br><br>🚫 Login via browser dinonaktifkan.';
+            container.appendChild(successMsg);
+
+            // Optional: Haptic feedback
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
         });
+
+        // Fingerprint Authentication Functions
+        async function checkFingerprintAvailability() {
+            const fingerprintBtn = document.getElementById('fingerprintBtn');
+
+            // Only show in PWA mode and if registered
+            if (!isPWAMode() || !window.PublicKeyCredential || !localStorage.getItem('webauthn_registered')) {
+                return;
+            }
+
+            const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+            if (available) {
+                fingerprintBtn.style.display = 'flex';
+                fingerprintBtn.addEventListener('click', loginWithFingerprint);
+            }
+        }
+
+        async function loginWithFingerprint() {
+            try {
+                const fingerprintBtn = document.getElementById('fingerprintBtn');
+                fingerprintBtn.disabled = true;
+                fingerprintBtn.innerHTML = '🔄 <span>Memindai...</span>';
+
+                // Generate challenge
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                // Get credential (trigger fingerprint scan)
+                const assertion = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: challenge,
+                        timeout: 60000,
+                        userVerification: 'required'
+                    }
+                });
+
+                if (!assertion) {
+                    throw new Error('Fingerprint tidak dikenali');
+                }
+
+                // Verify with server
+                const response = await fetch('process/webauthn_login.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credential_id: assertion.id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Set PWA token for session separation
+                    localStorage.setItem('pwa_auth_token', 'authenticated_' + Date.now());
+
+                    // Redirect to home
+                    window.location.href = 'home.php';
+                } else {
+                    throw new Error(data.message || 'Login gagal');
+                }
+
+            } catch (error) {
+                console.error('Fingerprint login error:', error);
+                const fingerprintBtn = document.getElementById('fingerprintBtn');
+                fingerprintBtn.disabled = false;
+                fingerprintBtn.innerHTML = '🔐 <span>Login dengan Fingerprint</span>';
+
+                if (error.name !== 'NotAllowedError') {
+                    alert('❌ Login fingerprint gagal: ' + error.message + '\n\nSilakan gunakan username & password.');
+                }
+            }
+        }
 
         // Network status
         window.addEventListener('online', function () {

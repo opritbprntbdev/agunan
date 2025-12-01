@@ -1,0 +1,89 @@
+================================================================================
+        PANDUAN INSTALASI APLIKASI AGUNAN CAPTURE PWA
+              Sistem Input Data Agunan Mobile - BPR NTB
+================================================================================
+
+LANGKAH 1: PERSIAPAN
+--------------------------------------------------------------------------------
+1. Pastikan HP terhubung dengan internet (WiFi atau Data Seluler)
+2. Gunakan browser Google Chrome atau Samsung Internet Browser
+3. Minimal Android versi 8.0 atau iOS versi 14.0 ke atas
+
+
+LANGKAH 2: BUKA APLIKASI DI BROWSER
+--------------------------------------------------------------------------------
+1. Buka browser Chrome di HP Anda
+2. Ketik alamat URL berikut di address bar:
+   
+   https://agunan.bprntb.co.id
+   
+   atau
+   
+   http://191.69.1.10/agunan-capture
+   
+3. Tekan Enter dan tunggu halaman loading
+4. Anda akan melihat halaman login
+
+
+LANGKAH 3: INSTALL APLIKASI
+--------------------------------------------------------------------------------
+1. Di halaman login, scroll ke bawah
+2. Cari tombol biru bertuliskan:
+   
+   📥 Install Aplikasi
+   
+3. Klik tombol tersebut
+4. Akan muncul popup konfirmasi "Tambahkan Agunan ke Layar beranda?"
+5. Klik tombol "Install" atau "Tambahkan"
+6. Tunggu proses instalasi (sekitar 5-10 detik)
+7. Setelah selesai, icon aplikasi "Agunan" akan muncul di home screen HP
+
+
+LANGKAH 4: VERIFIKASI INSTALASI
+--------------------------------------------------------------------------------
+1. Keluar dari browser Chrome
+2. Cari icon aplikasi "Agunan" di home screen HP
+3. Icon berbentuk logo BPR NTB berwarna biru
+4. Pastikan icon sudah muncul sebelum melanjutkan ke langkah login
+
+
+⚠️ CATATAN PENTING:
+- Jangan login dari browser biasa (Chrome/Safari)
+- Login HANYA diperbolehkan dari aplikasi yang sudah terinstall
+- Jika login dari browser, akan muncul peringatan error
+- Pastikan selalu buka aplikasi dari icon di home screen
+
+
+TROUBLESHOOTING:
+--------------------------------------------------------------------------------
+Masalah: Tombol "Install Aplikasi" tidak muncul
+Solusi: 
+- Pastikan menggunakan HTTPS (https://agunan.bprntb.co.id)
+- Refresh halaman dengan menekan Ctrl+R atau pull-down
+- Clear cache browser di Settings > Apps > Chrome > Clear Cache
+
+Masalah: Proses install terlalu lama (lebih dari 1 menit)
+Solusi:
+- Cek koneksi internet Anda
+- Pastikan tidak dalam mode data saver
+- Coba restart browser dan install ulang
+
+Masalah: Icon tidak muncul di home screen setelah install
+Solusi:
+- Cek di app drawer (semua aplikasi)
+- Restart HP
+- Coba install ulang dari browser
+
+
+KONTAK BANTUAN:
+--------------------------------------------------------------------------------
+Jika mengalami kesulitan instalasi, hubungi:
+- IT Support: [Nomor HP/WA IT Support]
+- Email: [Email IT Support]
+- Kantor Pusat: [Nomor Telepon Kantor]
+
+
+================================================================================
+                        Versi: 2.0 Mobile Edition
+                    © 2025 BPR NTB - IT Department
+================================================================================

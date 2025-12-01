@@ -68,6 +68,17 @@ if (!is_dir($pdfDirAbs)) {
     }
 }
 
+// ========== FIX: Delete PDF lama jika ada (saat edit agunan) ==========
+if (!empty($data['pdf_path']) && file_exists(__DIR__ . '/../' . $data['pdf_path'])) {
+    $oldPdfPath = __DIR__ . '/../' . $data['pdf_path'];
+    if (@unlink($oldPdfPath)) {
+        error_log("Deleted old PDF: " . $oldPdfPath);
+    } else {
+        error_log("Failed to delete old PDF: " . $oldPdfPath);
+    }
+}
+// ========== END FIX ==========
+
 // Nama file PDF
 $ts = date('YmdHis');
 $pdfFilename = 'agunan_' . preg_replace('/[^a-zA-Z0-9_\-]/', '', $id_agunan) . '_' . $ts . '.pdf';

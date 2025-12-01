@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Upload</title></head>
+<body>
+<h2>Test Upload Voucher</h2>
+<button onclick="testUpload()">Test Upload</button>
+<pre id="result"></pre>
+<script>
+async function testUpload() {
+  const formData = new FormData();
+  formData.append('no_bukti', '001-TEST-123');
+  formData.append('keterangan', 'Test foto');
+  
+  const res = document.getElementById('result');
+  res.textContent = 'Loading...';
+  
+  try {
+    const response = await fetch('../process/upload_voucher_photo.php', {
+      method: 'POST',
+      body: formData
+    });
+    
+    const text = await response.text();
+    res.textContent = 'Status: ' + response.status + '\n\nResponse:\n' + text;
+    
+    try {
+      const json = JSON.parse(text);
+      res.textContent += '\n\nParsed JSON:\n' + JSON.stringify(json, null, 2);
+    } catch(e) {
+      res.textContent += '\n\nJSON Parse Error: ' + e.message;
+    }
+  } catch(error) {
+    res.textContent = 'Fetch Error: ' + error.message;
+  }
+}
+</script>
+</body>
+</html>

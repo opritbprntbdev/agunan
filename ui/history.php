@@ -1,6 +1,9 @@
 <?php
 session_start();
-if (!isset($_SESSION['login'])) { header('Location: ../index.php'); exit; }
+
+// CRITICAL SECURITY: Load agunan guard
+require_once '../agunan_guard.php';
+
 require_once __DIR__ . '/../config.php';
 
 $kode_kantor = $_SESSION['kode_kantor'] ?? '000';

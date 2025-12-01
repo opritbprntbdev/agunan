@@ -1,9 +1,24 @@
 <?php
 session_start();
+
+// SECURITY: Check login
 if (!isset($_SESSION['login'])) {
   header('Location: index.php');
   exit;
 }
+
+// CRITICAL: Block patroli users from accessing agunan/voucher
+if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === 'patroli_security') {
+  // Patroli user trying to access agunan - redirect back!
+  header('Location: patroli/ui/patroli_home.php');
+  exit;
+}
+
+// CRITICAL: Agunan/voucher users must have this user_type
+if (!isset($_SESSION['user_type'])) {
+  $_SESSION['user_type'] = 'agunan_voucher'; // Set default for old sessions
+}
+
 $nama_kc = $_SESSION['nama_kc'] ?? '';
 $username = $_SESSION['username'] ?? '';
 $kode_kantor = $_SESSION['kode_kantor'] ?? '000';
@@ -19,6 +34,27 @@ $kode_kantor = $_SESSION['kode_kantor'] ?? '000';
   <meta name="apple-mobile-web-app-capable" content="yes">
   <link rel="manifest" href="manifest.json">
   <title>Agunan Capture - Home</title>
+  <script>
+    // Universal PWA detection function
+    function isPWAMode() {
+      const displayMode = window.matchMedia('(display-mode: fullscreen)').matches || 
+                        window.matchMedia('(display-mode: standalone)').matches ||
+                        window.matchMedia('(display-mode: minimal-ui)').matches;
+      const standalone = window.navigator.standalone === true;
+      return displayMode || standalone;
+    }
+
+    // PWA Auth Protection - Cek di awal sebelum render
+    (function() {
+      const hasPWAToken = localStorage.getItem('pwa_auth_token');
+      
+      // Jika buka dari browser (bukan PWA) dan tidak punya token PWA
+      if (!isPWAMode() && !hasPWAToken) {
+        // Force logout dan redirect ke login
+        window.location.href = 'logout.php?reason=browser_access';
+      }
+    })();
+  </script>
   <style>
     * {
       box-sizing: border-box
@@ -128,10 +164,12 @@ $kode_kantor = $_SESSION['kode_kantor'] ?? '000';
         <?php endif; ?>
       </p>
       <div class="grid">
-        <a class="btn" href="ui/voucher_capture.php">💳 Voucher Capture</a>
+        <a class="btn" href="ui/voucher_list.php">💳 Voucher GL (Baru)</a>
+        <!-- <a class="btn" href="ui/voucher_capture.php">💳 Voucher Capture (Lama)</a> -->
         <a class="btn" href="ui/capture_batch.php">🏠 Agunan Capture</a>
         <a class="btn secondary" href="ui/voucher_history.php">💳 Riwayat Voucher</a>
         <a class="btn secondary" href="ui/history.php">📄 Riwayat Agunan</a>
+        <a class="btn secondary" href="ui/check_location.php">📍 Cek Lokasi</a>
 
         <!-- <a class="btn secondary" href="ui/capture.php">📸 Kamera Single (lama)</a> -->
         <!-- <a class="btn secondary" href="form.php">📝 Form Klasik (upload file)</a> -->
@@ -151,6 +189,95 @@ $kode_kantor = $_SESSION['kode_kantor'] ?? '000';
       Notification.requestPermission().then(permission => {
         console.log('Notification permission:', permission);
       });
+    }
+
+    // Detect PWA uninstall - clear token when app is uninstalled
+    window.addEventListener('beforeunload', function() {
+      if (!isPWAMode()) {
+        // Kalau bukan PWA lagi, clear token (berarti uninstall)
+        localStorage.removeItem('pwa_auth_token');
+      }
+    });
+
+    // Check WebAuthn support and prompt fingerprint registration
+    window.addEventListener('DOMContentLoaded', async function() {
+      // Check if already registered
+      if (localStorage.getItem('webauthn_registered')) {
+        return;
+      }
+
+      // Check browser support
+      if (!window.PublicKeyCredential) {
+        return; // Browser doesn't support WebAuthn
+      }
+
+      // Check if platform authenticator available (fingerprint/face ID)
+      const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+      
+      if (available) {
+        // Prompt user to register fingerprint
+        setTimeout(() => {
+          if (confirm('🔐 Aktifkan login dengan fingerprint/biometrik untuk akses lebih cepat?\n\n✅ Login otomatis tanpa password\n✅ Lebih aman\n✅ Lebih cepat')) {
+            registerFingerprint();
+          }
+        }, 2000); // Delay 2 detik setelah halaman load
+      }
+    });
+
+    async function registerFingerprint() {
+      try {
+        // Get registration options from server
+        const optionsRes = await fetch('process/webauthn_register_options.php');
+        const optionsData = await optionsRes.json();
+        
+        if (!optionsData.success) {
+          throw new Error(optionsData.message);
+        }
+
+        const options = optionsData.options;
+        
+        // Convert base64 strings to ArrayBuffer
+        options.challenge = Uint8Array.from(atob(options.challenge), c => c.charCodeAt(0));
+        options.user.id = Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0));
+
+        // Create credential (trigger fingerprint prompt)
+        const credential = await navigator.credentials.create({
+          publicKey: options
+        });
+
+        // Send credential to server
+        const verifyRes = await fetch('process/webauthn_register_verify.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            credential: {
+              id: credential.id,
+              rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+              type: credential.type,
+              response: {
+                attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject))),
+                clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)))
+              }
+            },
+            device_name: navigator.userAgent.includes('Android') ? 'Android Device' : 'iOS Device'
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+        
+        if (verifyData.success) {
+          localStorage.setItem('webauthn_registered', 'true');
+          alert('✅ Fingerprint berhasil didaftarkan!\n\nAnda bisa login dengan fingerprint di login berikutnya.');
+        } else {
+          throw new Error(verifyData.message);
+        }
+
+      } catch (error) {
+        console.error('WebAuthn registration error:', error);
+        if (error.name !== 'NotAllowedError') {
+          alert('❌ Gagal mendaftarkan fingerprint: ' + error.message);
+        }
+      }
     }
   </script>
 </body>

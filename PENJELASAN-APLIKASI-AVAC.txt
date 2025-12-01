@@ -1,0 +1,1160 @@
+================================================================================
+     PENJELASAN APLIKASI AVAC (AGUNAN & VOUCHER CAPTURE)
+     Untuk Penyusunan Standard Operating Procedure (SOP)
+================================================================================
+
+Dokumen ini menjelaskan cara kerja aplikasi AVAC dari sisi pengguna dan proses 
+bisnis, bukan dari sisi teknis/kode program.
+
+================================================================================
+PERTANYAAN PANDUAN UNTUK PENYUSUNAN SOP
+================================================================================
+
+Agar saya bisa membuat SOP yang akurat dan detail, saya perlu memahami cara 
+kerja aplikasi AVAC. Anda tidak perlu memberikan kode program, cukup jelaskan 
+dari sisi pengguna dan proses bisnis. Berikut adalah panduan yang bisa Anda 
+ikuti:
+
+Silakan jelaskan aplikasi AVAC berdasarkan poin-poin berikut:
+
+1. Tujuan Utama Aplikasi:
+   Apa masalah utama yang diselesaikan oleh AVAC? (Contoh: "Untuk 
+   mendigitalisasi dan mempermudah pencatatan voucher agunan nasabah oleh 
+   Account Officer di lapangan.")
+   Apa output utama dari aplikasi ini? (Contoh: "Data voucher agunan yang 
+   lengkap beserta foto-foto dokumen dan agunan, yang tersimpan di database 
+   server pusat.")
+
+2. Pengguna (Users):
+   Siapa saja yang menggunakan aplikasi ini? (Contoh: Account Officer (AO), 
+   Surveyor, Head of Collection, Staff Back Office.)
+   Apakah ada peran (role) yang berbeda dengan hak akses yang berbeda pula? 
+   (Contoh: AO bisa input dan edit, Head of Collection bisa approve, Back 
+   Office hanya bisa melihat.)
+
+3. Alur Kerja (Workflow) Utama:
+   Ini adalah bagian terpenting. Jelaskan langkah demi langkah, seperti 
+   membuat cerita.
+   
+   Instalasi & Login: Bagaimana cara aplikasi di-install? Dari mana 
+   sumbernya (bukan Play Store, kan)? Bagaimana cara login? (Menggunakan 
+   username/password khusus, SSO, atau apa?)
+   
+   Halaman Utama (Dashboard): Apa saja yang muncul setelah login? (Contoh: 
+   Menu "Input Voucher Baru", "Data Saya", "Laporan", "Profil".)
+   
+   Proses Inti (Misal: "Input Voucher Agunan Baru"):
+   Langkah 1: Pengguna pilih menu "Input Voucher Baru".
+   Langkah 2: Apa saja field (kolom) yang harus diisi? (Contoh: Nomor 
+   Rekening, Nama Nasabah, Jenis Agunan [BPKB Kendaraan, Sertifikat Tanah], 
+   Nomor Voucher, Nilai Agunan, dll.)
+   Langkah 3: Apakah ada fitur upload foto/dokumen? (Contoh: Foto BPKB 
+   halaman 1 & 2, Foto STNK, Foto Selfi dengan agunan.)
+   Langkah 4: Apa yang terjadi setelah tombol "Simpan" atau "Kirim" ditekan? 
+   (Contoh: "Data tersimpan di HP sebagai draft dan terkirim ke server jika 
+   ada koneksi internet," atau "Langsung terkirim ke server dan mendapatkan 
+   nomor tiket.")
+   
+   Fitur Lainnya: Adakah fitur lain seperti pencarian data, edit data, 
+   pengajuan approval, atau melihat riwayat?
+   
+   Logout: Bagaimana cara pengguna keluar dari aplikasi?
+
+4. Aspek Keamanan:
+   Bagaimana aplikasi mengamankan data? (Contoh: "Password harus 8 karakter 
+   kombinasi huruf dan angka," "Session otomatis logout setelah 5 menit 
+   tidak aktif.")
+   Apakah ada kebijakan tentang perangkat? (Contoh: "Aplikasi tidak bisa 
+   di-install di HP yang sudah di-root/jailbreak.")
+
+5. Penanganan Kesalahan & Bantuan:
+   Jika terjadi error (misalnya, gagal upload foto), apa yang harus 
+   dilakukan pengguna?
+   Siapa yang harus dihubungi (helpdesk/IT) jika ada masalah?
+
+Anda bisa menjelaskannya dalam bentuk bullet points atau paragraf narasi. 
+Semakin detail, semakin baik SOP yang akan saya buat.
+
+================================================================================
+JAWABAN:
+================================================================================
+
+================================================================================
+1. TUJUAN UTAMA APLIKASI
+================================================================================
+
+MASALAH YANG DISELESAIKAN:
+- Proses pencatatan agunan dan voucher masih manual menggunakan kertas
+- Foto dokumen agunan/voucher tersebar di HP masing-masing staff, tidak 
+  tersentralisasi
+- Sulit melakukan audit trail dan monitoring real-time oleh manajemen
+- Data agunan dan voucher sering hilang atau tidak lengkap dokumentasinya
+- Proses verifikasi voucher memakan waktu lama karena harus mengumpulkan 
+  dokumen fisik
+- Tidak ada standarisasi format foto (resolusi, watermark, metadata lokasi)
+
+OUTPUT UTAMA APLIKASI:
+1. Database terpusat berisi data agunan nasabah:
+   - Nomor Rekening/CIF
+   - Jenis Agunan (BPKB, Sertifikat Tanah, dll)
+   - Nilai Agunan
+   - Foto agunan dengan watermark GPS coordinate + timestamp
+   - Keterangan agunan
+
+2. Database terpusat berisi data voucher transaksi:
+   - Nomor Voucher (unik)
+   - Tanggal Transaksi
+   - Jenis Transaksi
+   - Nominal Voucher
+   - Foto voucher (depan/belakang)
+   - Status: Pending → Verified → Locked
+
+3. Arsip digital (PDF) yang bisa di-export untuk:
+   - Laporan bulanan ke manajemen
+   - Keperluan audit internal/eksternal
+   - Rekonsiliasi finance
+   - Dokumentasi kredit nasabah
+
+4. Audit trail lengkap:
+   - Siapa yang capture (username + nama KC)
+   - Kapan capture (timestamp)
+   - Dimana capture (GPS coordinate)
+   - Perangkat apa yang digunakan (device info)
+
+================================================================================
+2. PENGGUNA (USERS) DAN HAK AKSES
+================================================================================
+
+PENGGUNA APLIKASI:
+
+1. STAFF KC (KEPALA CABANG)
+   - User utama yang melakukan capture agunan dan voucher di lapangan
+   - Menggunakan HP pribadi yang sudah di-install PWA
+   - Login menggunakan fingerprint (biometric authentication)
+   - Hak akses:
+     * Capture data agunan baru
+     * Edit data agunan (sebelum batch di-finalisasi)
+     * Capture data voucher baru
+     * Edit data voucher (sebelum di-verified oleh supervisor)
+     * View data yang dia capture sendiri
+     * Tidak bisa melihat data staff lain di cabang yang sama
+     * Tidak bisa delete data (soft delete hanya oleh Admin IT)
+
+2. KEPALA KC (KEPALA KANTOR CABANG)
+   - Monitoring semua data agunan dan voucher di cabangnya
+   - Login menggunakan username/password + fingerprint
+   - Hak akses:
+     * View semua data agunan di cabangnya (filter by kode_kantor)
+     * View semua data voucher di cabangnya
+     * Tidak bisa edit/delete data staff
+     * Export laporan bulanan untuk cabangnya
+     * Request pembuatan user baru untuk staff di cabangnya
+
+3. SUPERVISOR/MANAGER OPERASIONAL
+   - Melakukan verifikasi dan approval voucher
+   - Login menggunakan username/password + fingerprint
+   - Hak akses:
+     * View semua data voucher (all branches)
+     * Verify voucher: Approve atau Reject
+     * View detail foto voucher untuk QC (Quality Control)
+     * Tidak bisa edit data agunan
+     * Export laporan voucher per periode
+
+4. MANAGER KREDIT/PUSAT
+   - Monitoring agunan untuk keperluan approval kredit
+   - Login menggunakan username/password (bisa tanpa fingerprint)
+   - Hak akses:
+     * View semua data agunan (all branches)
+     * View semua data voucher (all branches)
+     * Export laporan untuk manajemen
+     * Tidak bisa edit/delete data
+     * Read-only access
+
+5. ADMIN IT
+   - Mengelola user dan sistem
+   - Login menggunakan username/password + 2FA (future)
+   - Hak akses:
+     * Full access: Create, Read, Update, Delete (CRUD)
+     * User management: Create user, reset password, reset fingerprint
+     * Soft delete data jika ada kesalahan input
+     * Unlock voucher yang sudah locked (dengan approval tertulis)
+     * Database maintenance dan backup
+     * Troubleshooting error
+
+6. AUDITOR (INTERNAL/EKSTERNAL)
+   - Audit trail dan compliance check
+   - Login menggunakan username temporary (expired after audit period)
+   - Hak akses:
+     * Read-only access ke semua data
+     * View audit log (siapa, kapan, apa yang dilakukan)
+     * Export full report semua periode
+     * Tidak bisa edit/delete apapun
+
+ROLE-BASED ACCESS CONTROL (RBAC):
+
+| Role          | Agunan        | Voucher          | User Mgmt | Report     |
+|---------------|---------------|------------------|-----------|------------|
+| Staff KC      | Capture, Edit | Capture, Edit    | -         | Own data   |
+| Kepala KC     | View branch   | View branch      | Request   | Branch     |
+| Supervisor    | View all      | Verify, Approve  | -         | Branch     |
+| Manager Kredit| View all      | View all         | -         | All        |
+| Admin IT      | Full access   | Full access      | Full      | All        |
+| Auditor       | Read-only all | Read-only all    | -         | All        |
+
+================================================================================
+3. ALUR KERJA (WORKFLOW) UTAMA
+================================================================================
+
+───────────────────────────────────────────────────────────────────────────────
+3.1 INSTALASI & LOGIN
+───────────────────────────────────────────────────────────────────────────────
+
+INSTALASI APLIKASI PWA:
+
+Langkah 1: Distribusi Link Instalasi
+- Staff KC menerima link instalasi dari Admin IT via WhatsApp/Email:
+  https://appdev.bprntb.co.id/app/agunan-capture/
+- PENTING: Bukan dari Play Store atau App Store
+- Aplikasi berbasis PWA (Progressive Web App) yang di-install seperti 
+  aplikasi native
+
+Langkah 2: Buka Link di Browser
+- Staff buka link menggunakan browser Chrome/Edge di HP Android/iOS
+- Pastikan menggunakan browser, BUKAN aplikasi WhatsApp/Instagram 
+  in-app browser
+- Jika terbuka di in-app browser, klik tombol "Open in Chrome"
+
+Langkah 3: Install PWA
+- Setelah halaman terbuka, akan muncul popup "Install App" atau 
+  "Add to Home Screen"
+- Jika tidak muncul otomatis:
+  * Android Chrome: Klik menu titik 3 → "Add to Home Screen"
+  * iOS Safari: Klik tombol Share → "Add to Home Screen"
+- Ketuk "Install" atau "Add"
+- Tunggu 5-10 detik hingga muncul icon "AVAC" di home screen HP
+
+Langkah 4: Buka Aplikasi Pertama Kali
+- Ketuk icon "AVAC" di home screen (JANGAN buka dari browser lagi)
+- Aplikasi akan terbuka dalam mode fullscreen seperti aplikasi native
+- Tidak ada address bar browser, tidak ada tombol back browser
+- Status bar HP (baterai, sinyal) tetap terlihat
+
+PROSES LOGIN:
+
+Metode 1: Login dengan Username & Password (Pertama Kali)
+- Langkah 1: Masukkan username yang diberikan oleh Admin IT
+- Langkah 2: Masukkan password (default: username123, wajib diganti)
+- Langkah 3: Klik tombol "Login"
+- Langkah 4: Jika berhasil, muncul halaman "Aktivasi Fingerprint"
+- Langkah 5: Klik "Daftar Fingerprint" untuk aktivasi biometric
+- Langkah 6: Ikuti petunjuk scan fingerprint di HP
+- Langkah 7: Setelah fingerprint terdaftar, klik "Selesai"
+- Langkah 8: Redirect ke halaman utama (Dashboard)
+
+Metode 2: Login dengan Fingerprint (Setelah Aktivasi)
+- Langkah 1: Buka aplikasi AVAC dari home screen
+- Langkah 2: Layar login muncul dengan tombol "Login dengan Fingerprint"
+- Langkah 3: Ketuk tombol fingerprint
+- Langkah 4: Scan fingerprint di sensor HP
+- Langkah 5: Jika cocok, langsung masuk ke Dashboard (tanpa password)
+- Langkah 6: Jika fingerprint tidak terbaca, bisa klik "Login dengan Password"
+
+KEAMANAN LOGIN:
+- Password minimal 8 karakter (kombinasi huruf dan angka)
+- Password harus diganti setelah login pertama kali
+- Fingerprint disimpan di server dengan enkripsi WebAuthn
+- Session timeout: 30 menit tidak aktif → auto logout
+- Jika login di browser biasa (bukan PWA) → DITOLAK
+- Aplikasi hanya bisa digunakan dalam mode PWA, tidak bisa di browser
+
+TROUBLESHOOTING INSTALASI:
+- Jika icon tidak muncul di home screen: Restart HP
+- Jika tidak bisa install: Cek versi browser (update ke versi terbaru)
+- Jika fingerprint tidak bisa diaktifkan: Cek setting HP (aktifkan biometric)
+- Jika lupa password: Hubungi Admin IT untuk reset
+
+───────────────────────────────────────────────────────────────────────────────
+3.2 HALAMAN UTAMA (DASHBOARD)
+───────────────────────────────────────────────────────────────────────────────
+
+Setelah login berhasil, pengguna masuk ke DASHBOARD dengan tampilan:
+
+BAGIAN ATAS (HEADER):
+- Logo BPR NTB
+- Nama pengguna yang sedang login
+- Nama Kantor Cabang
+- Tombol "Logout" (pojok kanan atas)
+
+BAGIAN TENGAH (MENU UTAMA):
+Terdapat 4 menu utama berbentuk card/kotak:
+
+1. [ICON KAMERA] CAPTURE AGUNAN
+   - Fungsi: Input data agunan baru dengan foto
+   - Tampilan: Icon kamera + tulisan "Capture Agunan"
+   - Ketuk untuk masuk ke halaman input agunan
+
+2. [ICON VOUCHER] CAPTURE VOUCHER
+   - Fungsi: Input data voucher baru dengan foto
+   - Tampilan: Icon dokumen + tulisan "Capture Voucher"
+   - Ketuk untuk masuk ke halaman input voucher
+
+3. [ICON RIWAYAT] HISTORY
+   - Fungsi: Melihat riwayat data yang sudah di-capture
+   - Tampilan: Icon clock + tulisan "History"
+   - Ketuk untuk melihat daftar agunan dan voucher yang sudah di-input
+
+4. [ICON PROFIL] PROFIL SAYA
+   - Fungsi: Melihat dan edit profil user
+   - Tampilan: Icon user + tulisan "Profil Saya"
+   - Ketuk untuk melihat detail user dan ganti password
+
+BAGIAN BAWAH (STATISTIK):
+- Total Agunan yang sudah di-capture bulan ini
+- Total Voucher yang sudah di-capture bulan ini
+- Status koneksi internet (Online/Offline)
+
+CATATAN PENTING:
+- Jika koneksi internet OFFLINE, menu "Capture Agunan" dan "Capture Voucher" 
+  tetap bisa digunakan (data tersimpan sementara di HP)
+- Data akan otomatis ter-upload ke server saat koneksi kembali online
+- Indikator "Pending Upload" akan muncul jika ada data yang belum ter-sync
+
+───────────────────────────────────────────────────────────────────────────────
+3.3 PROSES INTI: CAPTURE AGUNAN BARU
+───────────────────────────────────────────────────────────────────────────────
+
+LANGKAH 1: Masuk ke Menu "Capture Agunan"
+- Dari Dashboard, ketuk menu "Capture Agunan"
+- Muncul halaman form input agunan
+
+LANGKAH 2: Isi Data Agunan (FORM INPUT)
+Field yang WAJIB diisi:
+
+a) Nomor Rekening / CIF Nasabah
+   - Format: 10-15 digit angka
+   - Contoh: 1234567890
+   - Validasi: Harus valid (ada di core banking)
+   - Jika tidak valid, muncul error: "CIF tidak ditemukan"
+
+b) Nama Nasabah
+   - Otomatis muncul setelah CIF valid
+   - Read-only (tidak bisa diedit)
+   - Diambil dari database core banking
+
+c) Jenis Agunan
+   - Dropdown pilihan:
+     * BPKB Kendaraan (Mobil/Motor)
+     * Sertifikat Tanah/Rumah (SHM/SHGB)
+     * Deposito
+     * Tabungan
+     * Lainnya (isi manual)
+   - Pilih salah satu
+
+d) Nilai Agunan (Rp)
+   - Format: Angka, otomatis formatted dengan separator ribuan
+   - Contoh input: 50000000 → Tampilan: Rp 50.000.000
+   - Minimal: Rp 1.000.000
+   - Maksimal: Rp 999.999.999.999
+
+e) Keterangan
+   - Text area (multi-line)
+   - Minimal 10 karakter
+   - Contoh: "Sertifikat Tanah atas nama Budi Santoso, luas 500m2, 
+     lokasi Jl. Merdeka No. 10 Mataram"
+
+LANGKAH 3: Ambil Foto Agunan
+- Klik tombol "Ambil Foto Agunan"
+- Kamera HP akan terbuka (native camera)
+- Arahkan kamera ke agunan fisik (BPKB, Sertifikat, dll)
+- Pastikan foto jelas, tidak blur, lighting cukup
+- Ketuk tombol capture
+- Foto akan otomatis di-compress dan di-resize (max 2MB)
+
+LANGKAH 4: Preview Foto
+- Setelah foto diambil, muncul preview foto
+- Di foto terdapat WATERMARK otomatis:
+  * GPS Coordinate (Latitude, Longitude)
+  * Timestamp (Tanggal dan Jam capture)
+  * Username yang capture
+- Jika foto kurang jelas, bisa klik "Ambil Ulang"
+- Jika foto sudah OK, klik "Lanjutkan"
+
+LANGKAH 5: Review Data Sebelum Submit
+- Muncul halaman review berisi:
+  * Data agunan yang sudah diisi
+  * Preview foto yang sudah diambil
+- Cek kembali semua data
+- Jika ada yang salah, klik "Edit" untuk kembali ke form
+- Jika sudah benar, klik tombol "SUBMIT"
+
+LANGKAH 6: Proses Submit
+- Aplikasi akan menampilkan loading indicator
+- Proses yang terjadi:
+  * Foto di-upload ke server
+  * Data agunan disimpan ke database
+  * Generate PDF arsip (background process)
+  * Update statistik dashboard
+- Jika koneksi internet ONLINE:
+  * Data langsung ter-upload ke server
+  * Muncul notifikasi: "Data agunan berhasil disimpan"
+  * Redirect ke Dashboard
+- Jika koneksi internet OFFLINE:
+  * Data tersimpan di localStorage HP
+  * Muncul notifikasi: "Data tersimpan offline, akan di-upload otomatis 
+    saat online"
+  * Status: "Pending Upload" (warna kuning)
+  * Redirect ke Dashboard
+
+LANGKAH 7: Verifikasi Data Tersimpan
+- Dari Dashboard, klik menu "History"
+- Cari data agunan yang baru di-capture
+- Klik untuk melihat detail
+- Pastikan:
+  * Data agunan sesuai
+  * Foto agunan muncul
+  * Watermark GPS dan timestamp ada
+  * Status: "Captured" (jika online) atau "Pending Upload" (jika offline)
+
+CATATAN KHUSUS:
+- Satu agunan bisa memiliki beberapa foto (misalnya: BPKB halaman 1, 
+  halaman 2, foto fisik kendaraan)
+- Untuk menambah foto tambahan, klik tombol "+ Tambah Foto"
+- Maksimal 5 foto per agunan
+- Ukuran foto maksimal 2MB per file (otomatis di-compress)
+
+VALIDASI ERROR:
+- Jika ada field yang belum diisi → Error: "Field wajib diisi belum lengkap"
+- Jika CIF tidak valid → Error: "CIF tidak ditemukan di database"
+- Jika nilai agunan < 1 juta → Error: "Nilai agunan minimal Rp 1.000.000"
+- Jika foto tidak diambil → Error: "Foto agunan wajib diambil"
+- Jika gagal upload → Error: "Gagal upload foto, cek koneksi internet"
+
+───────────────────────────────────────────────────────────────────────────────
+3.4 PROSES INTI: CAPTURE VOUCHER BARU
+───────────────────────────────────────────────────────────────────────────────
+
+LANGKAH 1: Masuk ke Menu "Capture Voucher"
+- Dari Dashboard, ketuk menu "Capture Voucher"
+- Muncul halaman form input voucher
+
+LANGKAH 2: Isi Data Voucher (FORM INPUT)
+Field yang WAJIB diisi:
+
+a) Nomor Voucher
+   - Format: Alphanumeric, 10-20 karakter
+   - Contoh: VCH-2025-001234
+   - Validasi: Harus UNIK (tidak boleh duplikat)
+   - Jika duplikat, muncul error: "Nomor voucher sudah pernah digunakan"
+
+b) Tanggal Transaksi
+   - Format: DD/MM/YYYY
+   - Input via date picker (kalender)
+   - Validasi: Tidak boleh backdate lebih dari 3 hari
+   - Contoh: Jika hari ini 26/11/2025, maka tanggal minimal 23/11/2025
+
+c) Jenis Transaksi
+   - Dropdown pilihan sesuai Chart of Accounts:
+     * Kas Masuk
+     * Kas Keluar
+     * Bank Masuk
+     * Bank Keluar
+     * Transfer Antar Bank
+     * Biaya Operasional
+     * Pembayaran Gaji
+     * Lainnya (isi manual)
+   - Pilih salah satu
+
+d) Nominal Voucher (Rp)
+   - Format: Angka, otomatis formatted dengan separator ribuan
+   - Contoh input: 1500000 → Tampilan: Rp 1.500.000
+   - Minimal: Rp 1.000
+   - Maksimal: Rp 999.999.999.999
+   - Validasi: Harus > 0
+
+e) Keterangan
+   - Text area (multi-line)
+   - Minimal 10 karakter
+   - Wajib menjelaskan tujuan/keperluan voucher
+   - Contoh: "Pembayaran biaya listrik kantor bulan November 2025, 
+     PLN Mataram, meteran no. 123456789"
+
+LANGKAH 3: Ambil Foto Voucher (Depan/Belakang)
+- Klik tombol "Ambil Foto Voucher (Depan)"
+- Kamera HP akan terbuka
+- Arahkan kamera ke voucher fisik (dokumen, kwitansi, invoice)
+- Pastikan foto jelas, nomor voucher terbaca, tanda tangan terlihat
+- Ketuk tombol capture
+- Foto otomatis di-compress dan di-resize
+
+- Klik tombol "Ambil Foto Voucher (Belakang)" (OPSIONAL)
+- Jika voucher ada isi di halaman belakang, ambil foto juga
+- Jika tidak ada isi belakang, bisa di-skip
+
+LANGKAH 4: Preview Foto Voucher
+- Setelah foto diambil, muncul preview
+- Foto voucher TIDAK ada watermark GPS (berbeda dengan agunan)
+- Watermark hanya berisi:
+  * Timestamp (Tanggal dan Jam capture)
+  * Username yang capture
+- Jika foto kurang jelas, klik "Ambil Ulang"
+- Jika sudah OK, klik "Lanjutkan"
+
+LANGKAH 5: Review Data Sebelum Submit
+- Muncul halaman review berisi:
+  * Data voucher yang sudah diisi
+  * Preview foto depan dan belakang (jika ada)
+- Cek kembali semua data
+- PENTING: Pastikan nominal sesuai dengan voucher fisik
+- Jika ada yang salah, klik "Edit"
+- Jika sudah benar, klik tombol "SUBMIT"
+
+LANGKAH 6: Proses Submit
+- Aplikasi menampilkan loading indicator
+- Proses yang terjadi:
+  * Foto voucher di-upload ke server
+  * Data voucher disimpan ke database dengan status "Pending Verification"
+  * Notifikasi dikirim ke Supervisor untuk verifikasi
+  * Update statistik dashboard
+- Jika koneksi internet ONLINE:
+  * Data langsung ter-upload
+  * Muncul notifikasi: "Voucher berhasil disimpan dan menunggu verifikasi"
+  * Status: "Pending Verification" (warna kuning)
+  * Redirect ke Dashboard
+- Jika koneksi internet OFFLINE:
+  * Data tersimpan di localStorage HP
+  * Muncul notifikasi: "Data tersimpan offline, akan di-upload otomatis"
+  * Status: "Pending Upload" (warna merah)
+  * Redirect ke Dashboard
+
+LANGKAH 7: Monitoring Status Voucher
+- Dari Dashboard, klik menu "History"
+- Pilih tab "Voucher"
+- Cari voucher yang baru di-capture
+- Status voucher bisa berubah:
+  * "Pending Upload" → Belum ter-upload ke server (offline)
+  * "Pending Verification" → Sudah ter-upload, menunggu verifikasi Supervisor
+  * "Verified" → Sudah di-approve oleh Supervisor
+  * "Rejected" → Di-reject oleh Supervisor, harus diperbaiki
+
+LANGKAH 8: Jika Voucher Di-REJECT
+- Staff akan menerima notifikasi: "Voucher VCH-2025-001234 di-reject"
+- Klik notifikasi atau buka menu "History" → tab "Voucher"
+- Klik voucher yang di-reject
+- Lihat "Alasan Reject" dari Supervisor, contoh:
+  * "Foto voucher blur, tidak terbaca"
+  * "Nominal tidak sesuai dengan kwitansi"
+  * "Keterangan kurang lengkap"
+- Klik tombol "Perbaiki Voucher"
+- Edit data atau ambil foto ulang
+- Submit kembali dengan status "Re-Submitted"
+- Voucher kembali masuk antrian verifikasi
+
+CATATAN KHUSUS:
+- Voucher yang sudah "Verified" TIDAK BISA diedit oleh Staff
+- Jika ada kesalahan pada voucher yang sudah verified, hubungi Admin IT
+- Voucher yang sudah "Locked" (periode sudah ditutup) TIDAK BISA diedit 
+  oleh siapapun kecuali Admin IT dengan approval tertulis
+
+VALIDASI ERROR:
+- Jika nomor voucher duplikat → Error: "Nomor voucher sudah ada"
+- Jika tanggal backdate > 3 hari → Error: "Tanggal transaksi terlalu lama"
+- Jika nominal = 0 → Error: "Nominal voucher harus lebih dari 0"
+- Jika foto tidak diambil → Error: "Foto voucher wajib diambil"
+- Jika keterangan < 10 karakter → Error: "Keterangan terlalu singkat"
+
+───────────────────────────────────────────────────────────────────────────────
+3.5 FITUR LAINNYA
+───────────────────────────────────────────────────────────────────────────────
+
+A. MENU HISTORY (RIWAYAT DATA)
+
+Fungsi: Melihat semua data agunan dan voucher yang sudah di-capture
+
+Langkah:
+1. Dari Dashboard, klik menu "History"
+2. Muncul halaman dengan 2 tab:
+   - Tab "Agunan"
+   - Tab "Voucher"
+3. Pilih tab sesuai kebutuhan
+
+Tab AGUNAN:
+- Menampilkan daftar agunan yang sudah di-capture
+- Informasi yang ditampilkan:
+  * Tanggal capture
+  * CIF Nasabah
+  * Nama Nasabah
+  * Jenis Agunan
+  * Nilai Agunan
+  * Status (Captured, Pending Upload, Finalized)
+- Fitur Filter:
+  * Filter by Tanggal (range date)
+  * Filter by Jenis Agunan
+  * Filter by Status
+- Fitur Search: Cari by CIF atau Nama Nasabah
+- Fitur Sort: Urutkan by Tanggal (terbaru/terlama) atau Nilai (terbesar/terkecil)
+- Klik salah satu item untuk melihat DETAIL AGUNAN
+
+Detail Agunan:
+- Menampilkan semua informasi agunan
+- Menampilkan foto agunan (bisa zoom in/out)
+- Tombol "Edit" (jika status masih "Captured", belum finalized)
+- Tombol "Download PDF" (untuk export ke PDF)
+- Tombol "Share" (untuk kirim via WhatsApp/Email)
+- Tombol "Hapus" (soft delete, minta konfirmasi)
+
+Tab VOUCHER:
+- Menampilkan daftar voucher yang sudah di-capture
+- Informasi yang ditampilkan:
+  * Tanggal capture
+  * Nomor Voucher
+  * Jenis Transaksi
+  * Nominal
+  * Status (Pending Upload, Pending Verification, Verified, Rejected, Locked)
+- Badge warna sesuai status:
+  * Merah: Pending Upload (offline)
+  * Kuning: Pending Verification
+  * Hijau: Verified
+  * Abu-abu: Rejected
+  * Biru: Locked
+- Fitur Filter:
+  * Filter by Tanggal
+  * Filter by Jenis Transaksi
+  * Filter by Status
+- Fitur Search: Cari by Nomor Voucher
+- Klik salah satu item untuk melihat DETAIL VOUCHER
+
+Detail Voucher:
+- Menampilkan semua informasi voucher
+- Menampilkan foto voucher depan/belakang
+- Jika status "Rejected", tampilkan "Alasan Reject"
+- Tombol "Edit" (jika status masih "Pending Verification" atau "Rejected")
+- Tombol "Download PDF"
+- Tombol "Share"
+- Tombol "Hapus" (hanya jika status "Pending")
+
+───────────────────────────────────────────────────────────────────────────────
+
+B. MENU PROFIL SAYA
+
+Fungsi: Melihat dan edit profil user, ganti password, manage fingerprint
+
+Langkah:
+1. Dari Dashboard, klik menu "Profil Saya"
+2. Muncul halaman profil dengan informasi:
+   - Username
+   - Nama Lengkap
+   - Nama Kantor Cabang
+   - Kode Kantor
+   - Tanggal Join
+   - Total Agunan yang sudah di-capture
+   - Total Voucher yang sudah di-capture
+   - Status Fingerprint (Aktif/Tidak Aktif)
+
+Fitur di Halaman Profil:
+
+1. Ganti Password
+   - Klik tombol "Ganti Password"
+   - Masukkan Password Lama
+   - Masukkan Password Baru (minimal 8 karakter)
+   - Konfirmasi Password Baru
+   - Klik "Simpan"
+   - Muncul notifikasi: "Password berhasil diganti"
+
+2. Manage Fingerprint
+   - Jika fingerprint belum aktif:
+     * Klik "Aktifkan Fingerprint"
+     * Scan fingerprint di sensor HP
+     * Muncul notifikasi: "Fingerprint berhasil didaftarkan"
+   - Jika fingerprint sudah aktif:
+     * Klik "Reset Fingerprint" (untuk daftar ulang)
+     * Konfirmasi: "Yakin reset fingerprint?"
+     * Scan fingerprint baru
+     * Muncul notifikasi: "Fingerprint berhasil di-reset"
+
+3. Edit Profil
+   - Klik tombol "Edit Profil"
+   - Field yang bisa diedit:
+     * Nama Lengkap
+     * Nomor HP (untuk notifikasi)
+     * Email (opsional)
+   - Field yang TIDAK bisa diedit:
+     * Username (fixed)
+     * Kode Kantor (fixed)
+   - Klik "Simpan"
+
+───────────────────────────────────────────────────────────────────────────────
+
+C. MENU VERIFIKASI VOUCHER (Khusus Supervisor/Manager)
+
+Fungsi: Approve atau Reject voucher yang di-submit oleh Staff
+
+Langkah:
+1. Supervisor login ke aplikasi
+2. Dari Dashboard, muncul badge notifikasi di menu "Verifikasi Voucher"
+   - Badge berisi jumlah voucher yang menunggu verifikasi
+   - Contoh: "Verifikasi Voucher (5)" → Ada 5 voucher pending
+3. Klik menu "Verifikasi Voucher"
+4. Muncul daftar voucher dengan status "Pending Verification"
+5. Informasi yang ditampilkan:
+   - Nomor Voucher
+   - Tanggal Transaksi
+   - Staff yang capture (username + nama)
+   - Kantor Cabang
+   - Jenis Transaksi
+   - Nominal
+   - Tanggal Submit
+6. Klik salah satu voucher untuk melihat detail
+
+Detail Voucher untuk Verifikasi:
+- Menampilkan semua data voucher
+- Menampilkan foto voucher (depan/belakang)
+- Fitur Zoom In/Out foto untuk cek kejelasan
+- Checklist Quality Control:
+  * [ ] Foto voucher jelas dan terbaca
+  * [ ] Nomor voucher sesuai dengan foto
+  * [ ] Nominal sesuai dengan kwitansi
+  * [ ] Tanggal transaksi sesuai
+  * [ ] Keterangan lengkap dan jelas
+  * [ ] Tanda tangan/cap ada (jika diperlukan)
+
+Tombol Aksi:
+1. Tombol "APPROVE" (warna hijau)
+   - Klik jika semua checklist OK
+   - Konfirmasi: "Yakin approve voucher ini?"
+   - Klik "Ya"
+   - Status voucher berubah menjadi "Verified"
+   - Staff akan menerima notifikasi: "Voucher Anda telah di-approve"
+   - Voucher masuk ke laporan bulanan
+
+2. Tombol "REJECT" (warna merah)
+   - Klik jika ada yang tidak sesuai
+   - Muncul form "Alasan Reject" (text area, wajib diisi)
+   - Contoh alasan:
+     * "Foto blur, tidak terbaca"
+     * "Nominal tidak sesuai kwitansi (seharusnya Rp 1.500.000 bukan 
+       Rp 1.000.000)"
+     * "Tanda tangan tidak ada"
+     * "Keterangan tidak lengkap"
+   - Klik "Kirim"
+   - Status voucher berubah menjadi "Rejected"
+   - Staff akan menerima notifikasi: "Voucher Anda di-reject" + alasan
+   - Staff harus perbaiki dan re-submit
+
+───────────────────────────────────────────────────────────────────────────────
+
+D. FITUR FINALISASI BATCH (Khusus Agunan)
+
+Fungsi: Mengunci data agunan per hari kerja agar tidak bisa diedit lagi
+
+Langkah:
+1. Staff sudah capture semua agunan dalam 1 hari kerja
+2. Sebelum logout, klik menu "Finalisasi Batch"
+3. Muncul halaman dengan daftar agunan yang di-capture hari ini
+4. Review semua data agunan:
+   - Cek apakah semua agunan sudah lengkap
+   - Cek apakah foto sudah jelas
+   - Cek apakah tidak ada kesalahan input
+5. Jika ada yang perlu diedit, klik "Edit" pada item tersebut
+6. Jika semua sudah OK, klik tombol "FINALISASI BATCH HARI INI"
+7. Konfirmasi: "Yakin finalisasi batch? Data tidak bisa diedit lagi"
+8. Klik "Ya"
+9. Status semua agunan hari ini berubah menjadi "Finalized"
+10. Data ter-lock, tidak bisa diedit lagi
+11. Generate laporan PDF batch harian otomatis
+12. Muncul notifikasi: "Batch hari ini berhasil di-finalisasi"
+
+Catatan:
+- Finalisasi batch TIDAK WAJIB dilakukan setiap hari
+- Jika tidak di-finalisasi, data masih bisa diedit di hari-hari berikutnya
+- Namun, DISARANKAN finalisasi setiap hari untuk audit trail yang baik
+- Jika ada kesalahan pada data yang sudah finalized, hubungi Admin IT
+
+───────────────────────────────────────────────────────────────────────────────
+
+E. FITUR EXPORT LAPORAN (Khusus Manager/Kepala KC)
+
+Fungsi: Export data agunan/voucher ke PDF atau Excel
+
+Langkah:
+1. Manager/Kepala KC login
+2. Klik menu "Laporan"
+3. Pilih jenis laporan:
+   - Laporan Agunan
+   - Laporan Voucher
+4. Pilih periode:
+   - Hari ini
+   - Minggu ini
+   - Bulan ini
+   - Custom range (pilih start date dan end date)
+5. Pilih filter (opsional):
+   - Filter by Kantor Cabang (jika Manager Pusat)
+   - Filter by Staff (jika Kepala KC)
+   - Filter by Jenis Agunan/Transaksi
+   - Filter by Status
+6. Klik tombol "Generate Laporan"
+7. Aplikasi akan memproses data (loading 5-10 detik)
+8. Muncul preview laporan di layar
+9. Pilih format export:
+   - Download PDF (untuk printing)
+   - Download Excel (untuk olah data)
+10. File akan ter-download ke HP di folder "Downloads"
+11. Bisa langsung di-share via WhatsApp/Email
+
+Format Laporan:
+- Header: Logo BPR, Nama Laporan, Periode, Tanggal Generate
+- Tabel data: Semua field sesuai filter
+- Footer: Total Agunan/Voucher, Total Nominal, Nama & TTD Manager
+- Watermark: "Confidential - BPR NTB Internal Use Only"
+
+───────────────────────────────────────────────────────────────────────────────
+3.6 LOGOUT
+───────────────────────────────────────────────────────────────────────────────
+
+Langkah:
+1. Dari halaman manapun, klik tombol "Logout" di pojok kanan atas
+2. Muncul konfirmasi: "Yakin ingin logout?"
+3. Klik "Ya"
+4. Session akan di-clear
+5. Redirect ke halaman Login
+6. Aplikasi tetap terbuka (tidak close otomatis)
+
+Catatan:
+- Jika ada data yang belum ter-upload (status "Pending Upload"), akan 
+  muncul warning: "Ada data yang belum ter-upload, yakin logout?"
+- DISARANKAN logout setiap selesai kerja untuk keamanan
+- Auto logout otomatis terjadi jika tidak aktif selama 30 menit
+
+================================================================================
+4. ASPEK KEAMANAN
+================================================================================
+
+KEAMANAN PASSWORD:
+- Password minimal 8 karakter
+- Harus kombinasi huruf (A-Z, a-z) dan angka (0-9)
+- Disarankan menggunakan simbol (!@#$%^&*)
+- Password tidak boleh sama dengan username
+- Password harus diganti setiap 90 hari (akan muncul reminder)
+- Password tidak boleh sama dengan 3 password terakhir
+- Jika salah login 5 kali berturut-turut → Account ter-lock 15 menit
+
+KEAMANAN FINGERPRINT:
+- Fingerprint disimpan di server dengan enkripsi WebAuthn (standar W3C)
+- Fingerprint tidak disimpan dalam bentuk gambar, hanya hash credential
+- Satu user hanya bisa register 1 fingerprint (tidak bisa pakai 
+  fingerprint orang lain)
+- Jika ganti HP, fingerprint harus di-reset dan daftar ulang
+- Fingerprint akan auto-expire setelah 1 tahun (harus daftar ulang)
+
+KEAMANAN SESSION:
+- Session timeout: 30 menit tidak aktif → Auto logout
+- Jika login di HP baru, session di HP lama akan di-kick out (hanya 
+  1 session aktif per user)
+- Session tidak bisa di-share antar user
+- Token session di-encrypt dan disimpan di localStorage (secure storage)
+
+KEAMANAN APLIKASI PWA:
+- Aplikasi HANYA bisa digunakan dalam mode PWA (install di home screen)
+- Jika dibuka di browser biasa → Login DITOLAK dengan pesan: "Aplikasi 
+  harus di-install sebagai PWA"
+- Aplikasi tidak bisa di-screenshot (Android 9+) untuk mencegah data leak
+- Aplikasi tidak bisa berjalan di HP yang sudah di-root/jailbreak 
+  (akan muncul warning dan tidak bisa login)
+- Jika aplikasi di-uninstall, semua data lokal (cache, session) akan 
+  ter-hapus otomatis
+
+KEAMANAN DATA:
+- Semua komunikasi ke server menggunakan HTTPS (SSL Certificate)
+- Data yang dikirim di-encrypt dengan AES-256
+- Foto agunan/voucher di-embed dengan watermark yang tidak bisa dihapus
+- GPS coordinate ter-embed di EXIF metadata foto (tidak bisa diedit)
+- Audit trail: Semua aksi user (login, capture, edit, delete) ter-log 
+  di database dengan timestamp
+
+KEBIJAKAN PERANGKAT:
+- HP harus Android 9+ atau iOS 13+ (untuk support WebAuthn)
+- HP harus memiliki sensor fingerprint aktif (jika ingin pakai biometric)
+- HP tidak boleh di-root (Android) atau jailbreak (iOS)
+- HP harus install browser Chrome/Edge versi terbaru
+- HP harus aktif GPS (untuk watermark lokasi agunan)
+- HP disarankan memiliki kamera minimal 8MP (untuk foto jelas)
+
+BACKUP DATA:
+- Data di server di-backup otomatis setiap hari pukul 02:00 WIB
+- Backup disimpan di NAS internal + cloud storage (redundancy)
+- Retention policy: Backup harian (30 hari), bulanan (1 tahun), 
+  tahunan (7 tahun)
+- Jika HP hilang/rusak, data tidak hilang (semua tersimpan di server)
+
+================================================================================
+5. PENANGANAN KESALAHAN & BANTUAN
+================================================================================
+
+───────────────────────────────────────────────────────────────────────────────
+5.1 ERROR UMUM DAN SOLUSI
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 1: "Aplikasi tidak bisa di-install"
+Penyebab:
+- Browser tidak support PWA
+- Versi browser terlalu lama
+- HP tidak support PWA (terlalu lama)
+
+Solusi:
+1. Update browser Chrome/Edge ke versi terbaru
+2. Coba buka link di browser lain (Chrome/Edge/Safari)
+3. Restart HP
+4. Clear cache browser: Setting → Privacy → Clear browsing data
+5. Jika tetap tidak bisa, hubungi Admin IT
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 2: "Login ditolak: Aplikasi harus di-install sebagai PWA"
+Penyebab:
+- User membuka aplikasi dari browser (bukan dari icon PWA di home screen)
+
+Solusi:
+1. Jangan buka dari browser
+2. Buka dari icon "AVAC" di home screen HP
+3. Jika icon tidak ada, install ulang aplikasi (lihat panduan instalasi)
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 3: "Fingerprint tidak bisa didaftarkan"
+Penyebab:
+- HP tidak memiliki sensor fingerprint
+- Sensor fingerprint tidak aktif di setting HP
+- Browser tidak support WebAuthn
+
+Solusi:
+1. Cek setting HP: Security → Fingerprint → Pastikan aktif
+2. Tambahkan fingerprint di setting HP terlebih dahulu
+3. Update browser ke versi terbaru
+4. Jika tetap tidak bisa, gunakan login dengan password saja
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 4: "Gagal upload foto: Network error"
+Penyebab:
+- Koneksi internet terputus
+- Sinyal lemah
+- Server sedang maintenance
+
+Solusi:
+1. Cek koneksi internet: Buka browser, buka Google.com
+2. Jika koneksi OK tapi tetap error, coba lagi 5 menit kemudian
+3. Jika tetap error, data akan tersimpan offline (status "Pending Upload")
+4. Data akan otomatis ter-upload saat koneksi kembali normal
+5. Jika setelah 24 jam tetap "Pending Upload", hubungi Admin IT
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 5: "CIF tidak ditemukan"
+Penyebab:
+- CIF salah ketik
+- CIF belum terdaftar di core banking
+- Sinkronisasi data core banking belum update
+
+Solusi:
+1. Cek kembali nomor CIF di dokumen kredit
+2. Coba cari dengan nomor rekening nasabah
+3. Jika CIF baru (hari ini), tunggu 1 jam untuk sinkronisasi
+4. Jika tetap tidak ditemukan, hubungi Admin IT untuk cek database
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 6: "Nomor voucher sudah ada"
+Penyebab:
+- Nomor voucher sudah pernah di-input sebelumnya (duplikat)
+
+Solusi:
+1. Cek kembali nomor voucher di dokumen fisik
+2. Cari di menu "History" → tab "Voucher" apakah nomor ini sudah ada
+3. Jika memang sudah ada, gunakan nomor voucher yang berbeda
+4. Jika yakin nomor benar dan belum pernah di-input, hubungi Admin IT
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 7: "Session expired, silakan login kembali"
+Penyebab:
+- User tidak aktif selama 30 menit
+- User login di HP lain (session di-kick out)
+
+Solusi:
+1. Login ulang menggunakan fingerprint atau password
+2. Jika ada data yang sedang diisi (form belum di-submit), data akan hilang
+3. DISARANKAN: Jangan tinggal aplikasi lebih dari 15 menit saat sedang isi form
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 8: "Data tidak bisa diedit: Status sudah Finalized/Verified/Locked"
+Penyebab:
+- Data agunan sudah di-finalisasi
+- Data voucher sudah di-verified oleh Supervisor
+- Periode sudah di-lock (untuk voucher)
+
+Solusi:
+1. Jika ada kesalahan pada data yang sudah locked, TIDAK BISA diedit 
+   sendiri oleh Staff
+2. Hubungi Admin IT dengan informasi:
+   - Nomor Rekening/CIF (untuk agunan) atau Nomor Voucher
+   - Data yang salah (field apa yang perlu diperbaiki)
+   - Data yang benar (koreksi yang diinginkan)
+   - Alasan perubahan (mengapa perlu diedit)
+3. Admin IT akan melakukan soft edit setelah mendapat approval Manager
+4. Edit akan ter-log di audit trail
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 9: "Foto terlalu besar, maksimal 2MB"
+Penyebab:
+- Resolusi kamera HP terlalu tinggi (misalnya 48MP)
+- Foto tidak ter-compress otomatis
+
+Solusi:
+1. Setting kamera HP: Turunkan resolusi ke 8-12MP
+2. Jangan gunakan mode "Pro" atau "RAW" saat foto
+3. Gunakan mode "Auto" biasa
+4. Jika tetap error, ambil foto di tempat dengan lighting cukup (file 
+   size akan lebih kecil)
+
+───────────────────────────────────────────────────────────────────────────────
+
+ERROR 10: "Aplikasi crash / force close"
+Penyebab:
+- Memory HP penuh
+- Cache aplikasi terlalu besar
+- Bug aplikasi
+
+Solusi:
+1. Restart HP
+2. Clear cache aplikasi:
+   - Android: Setting HP → Apps → AVAC → Storage → Clear cache
+   - iOS: Uninstall dan install ulang aplikasi (data tidak hilang, 
+     tersimpan di server)
+3. Pastikan storage HP masih ada minimal 1GB free space
+4. Update aplikasi (jika ada update versi baru)
+5. Jika tetap crash, hubungi Admin IT dengan informasi:
+   - Merk dan tipe HP
+   - Versi Android/iOS
+   - Langkah yang dilakukan sebelum crash
+   - Screenshot error (jika ada)
+
+───────────────────────────────────────────────────────────────────────────────
+5.2 KONTAK HELPDESK / IT SUPPORT
+───────────────────────────────────────────────────────────────────────────────
+
+Jika mengalami masalah yang tidak bisa diselesaikan dengan panduan di atas, 
+hubungi:
+
+TIM IT SUPPORT BPR NTB:
+
+1. HELPDESK LEVEL 1 (Untuk pertanyaan umum, reset password, troubleshooting 
+   ringan)
+   - Nama: [Nama Staff IT Support]
+   - WhatsApp: 08xx-xxxx-xxxx
+   - Email: itsupport@bprntb.co.id
+   - Jam Kerja: Senin-Jumat, 08:00-16:00 WIB
+   - SLA Response: Maksimal 2 jam kerja
+
+2. ADMIN IT (Untuk edit data locked, unlock periode, troubleshooting berat)
+   - Nama: [Nama Admin IT]
+   - WhatsApp: 08xx-xxxx-xxxx
+   - Email: admin.it@bprntb.co.id
+   - Jam Kerja: Senin-Jumat, 08:00-17:00 WIB
+   - SLA Response: Maksimal 4 jam kerja
+
+3. MANAGER IT (Untuk escalation, approval unlock, konsultasi SOP)
+   - Nama: [Nama Manager IT]
+   - Email: manager.it@bprntb.co.id
+   - Jam Kerja: Senin-Jumat, 08:00-17:00 WIB
+   - Via appointment
+
+FORMAT LAPORAN MASALAH:
+Saat menghubungi IT Support, sertakan informasi berikut agar cepat ditangani:
+
+1. Nama & Username Anda
+2. Kantor Cabang
+3. Merk & Tipe HP
+4. Versi Android/iOS
+5. Deskripsi masalah (apa yang terjadi)
+6. Langkah yang sudah Anda lakukan sebelum error
+7. Screenshot error (jika ada)
+8. Apakah masalah terjadi di 1 HP saja atau semua staff mengalami (untuk 
+   identifikasi issue device vs server)
+
+Contoh Laporan yang BAIK:
+"Selamat pagi, saya Budi dari KC Mataram (username: budi_mataram). HP saya 
+Samsung A52, Android 12. Saat saya coba capture voucher tadi pukul 09:00, 
+setelah klik tombol Submit muncul error 'Network Error'. Padahal internet 
+saya lancar (bisa buka Google). Saya sudah coba restart aplikasi dan HP 
+tetap error. Teman saya di cabang yang sama tidak mengalami masalah. 
+Screenshot error saya kirim via WA ini."
+
+Contoh Laporan yang KURANG BAIK:
+"Aplikasi error, tolong diperbaiki."
+(Tidak jelas error apa, tidak ada informasi HP, tidak ada langkah yang 
+sudah dicoba)
+
+───────────────────────────────────────────────────────────────────────────────
+5.3 FAQ (FREQUENTLY ASKED QUESTIONS)
+───────────────────────────────────────────────────────────────────────────────
+
+Q1: Apakah aplikasi bisa digunakan tanpa internet (offline)?
+A1: BISA. Data agunan dan voucher bisa di-capture saat offline. Data akan 
+    tersimpan di HP dengan status "Pending Upload" dan otomatis ter-upload 
+    saat koneksi internet kembali online.
+
+Q2: Apakah data yang sudah di-capture bisa dihapus?
+A2: TIDAK BISA dihapus permanen (hard delete). Staff hanya bisa soft delete 
+    (data masih ada di database tapi status "Deleted"). Jika perlu hapus 
+    permanen, hubungi Admin IT dengan alasan yang jelas.
+
+Q3: Apakah satu HP bisa digunakan oleh beberapa user (bergantian)?
+A3: TIDAK DISARANKAN. Setiap user harus menggunakan HP sendiri karena 
+    fingerprint adalah personal. Jika terpaksa berbagi HP, user harus 
+    logout setelah selesai dan user berikutnya login dengan akunnya sendiri.
+
+Q4: Apakah aplikasi bisa di-install di tablet atau laptop?
+A4: BISA, asalkan device tersebut memiliki kamera (untuk capture foto). 
+    Namun, TIDAK DISARANKAN karena tablet/laptop tidak portable untuk 
+    dibawa ke lapangan.
+
+Q5: Berapa lama data disimpan di server?
+A5: Data agunan disimpan selama kredit aktif + 5 tahun setelah lunas. Data 
+    voucher disimpan selama 7 tahun sesuai ketentuan OJK. Setelah periode 
+    retensi, data akan di-archive (tidak dihapus, hanya dipindah ke cold storage).
+
+Q6: Apakah bisa capture agunan/voucher di luar jam kerja (weekend/malam)?
+A6: BISA. Aplikasi bisa digunakan 24/7. Namun, untuk agunan akan ada warning 
+    jika capture di luar jam kerja atau weekend (untuk audit trail).
+
+Q7: Apakah bisa ganti fingerprint ke jari lain?
+A7: BISA. Masuk ke menu "Profil Saya" → "Reset Fingerprint" → Daftar 
+    fingerprint baru dengan jari yang diinginkan.
+
+Q8: Kalau HP hilang/rusak, apakah data hilang juga?
+A8: TIDAK. Semua data tersimpan di server, tidak di HP. Jika HP hilang, 
+    Anda bisa install aplikasi di HP baru, login dengan username/password, 
+    dan semua data history tetap ada.
+
+Q9: Apakah aplikasi berbayar (perlu beli di Play Store)?
+A9: TIDAK. Aplikasi ini adalah internal BPR NTB, tidak dipublikasikan di 
+    Play Store, dan GRATIS untuk semua staff.
+
+Q10: Apakah bisa export data ke Excel untuk olah data sendiri?
+A10: BISA (khusus untuk Manager/Kepala KC). Masuk ke menu "Laporan" → 
+     Pilih periode → Download Excel.
+
+================================================================================
+END OF DOCUMENT
+================================================================================
+
+Dokumen ini disusun untuk membantu penyusunan SOP operasional aplikasi 
+AVAC (Agunan & Voucher Capture).
+
+Jika ada pertanyaan atau butuh klarifikasi lebih lanjut, silakan hubungi:
+- Tim IT Development BPR NTB
+- Email: itdev@bprntb.co.id
+
+Terakhir update: 26 November 2025
+Versi Dokumen: 1.0
